@@ -129,7 +129,7 @@ jobs:
 
       - name: Remove AdvertisingLite False Positives
         run: |
-          sed -i "/^[[:space:]]*-[[:space:]]*'+\\.asearch\\.alicdn\\.com'[[:space:]]*$/d" AdvertisingLite_Domain.yaml
+          sed -i '/alicdn\.com/d' AdvertisingLite_Domain.yaml
 
       - name: Convert AdvertisingLite Domain
         run: |
