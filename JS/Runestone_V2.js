@@ -41,7 +41,7 @@ function main(config) {
 
     "tun": {
       "enable": true,
-      "stack": "gvisor",
+      "stack": "mips",
       "auto-route": true,
       "auto-detect-interface": true,
       "strict-route": true,
