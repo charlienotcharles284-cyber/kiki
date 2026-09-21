@@ -1200,7 +1200,7 @@ function main(config) {
       "behavior": "classical",
       "format": "yaml",
       "interval": 86400,
-      "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Rule/Advertising.yaml"
+      "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Rules/Advertising.yaml"
     },
 
     "Advertising_Domain": {
