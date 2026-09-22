@@ -410,7 +410,7 @@ function main(config) {
   fixed["proxy-groups"].push({
     "name": "Facebook",
     "type": "select",
-    "icon: "https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/meta.svg",
+    "icon": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Meta.png",
     "proxies": [
       "🖥️ All-Nodes",
       "PROXY-Gate",
