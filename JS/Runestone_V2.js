@@ -373,7 +373,6 @@ function main(config) {
     ]
   });
 
-  // Apple 紧跟 Google
   // 注意：这里只修改普通 Apple 策略组图标。
   fixed["proxy-groups"].push({
     "name": "Apple",
@@ -386,7 +385,6 @@ function main(config) {
     ]
   });
 
-  // Amazon 紧跟 Apple
   fixed["proxy-groups"].push({
     "name": "Amazon",
     "type": "select",
@@ -412,7 +410,7 @@ function main(config) {
   fixed["proxy-groups"].push({
     "name": "Facebook",
     "type": "select",
-    "icon": "https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Facebook.png",
+    "icon": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Meta.png"",
     "proxies": [
       "🖥️ All-Nodes",
       "PROXY-Gate",
