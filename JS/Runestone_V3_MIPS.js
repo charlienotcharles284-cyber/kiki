@@ -1,9 +1,9 @@
-/* Runestone V3 — routing-only Hako post-merge override.
+/* Runestone V3 MIPS Beta — based on Runestone V3 — routing-only Hako post-merge override.
  * Import the raw JavaScript URL, save, and select it after node-source merging.
  * Network settings and node objects are retained. Rules and groups are replaced.
  * URL import is a snapshot: re-import to upgrade. See docs/RUNESTONE_V3.md.
  */
-const RUNESTONE = {repository: "kiki-rgb-00/kiki", personal: false};
+const RUNESTONE = {repository: "kiki-rgb-00/kiki", personal: false, tunStack: "mips"};
 
 function main(config) {
   // Hako 当前选中的所有机场节点都会合并到 config.proxies。
@@ -34,6 +34,8 @@ function main(config) {
 
   // Preserve client-owned networking and provider fields. Replace routing below.
   const fixed = Object.assign({}, config);
+  // Beta only: change the TUN stack and retain all other Hako settings.
+  fixed.tun = Object.assign({}, config.tun, {stack: RUNESTONE.tunStack});
   fixed.mode = "rule";
   fixed.profile = Object.assign({}, config.profile, {"store-selected": true});
 
