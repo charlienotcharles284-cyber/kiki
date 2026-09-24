@@ -373,7 +373,6 @@ function main(config) {
     ]
   });
 
-  // Apple 紧跟 Google
   // 注意：这里只修改普通 Apple 策略组图标。
   fixed["proxy-groups"].push({
     "name": "Apple",
@@ -386,11 +385,30 @@ function main(config) {
     ]
   });
 
-  // Amazon 紧跟 Apple
   fixed["proxy-groups"].push({
     "name": "Amazon",
     "type": "select",
     "icon": "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Amazon.png",
+    "proxies": [
+      "🖥️ All-Nodes",
+      "PROXY-Gate",
+      "DIRECT"
+    ]
+  });
+
+  // ============================================================
+  // Meta
+  //
+  // Facebook / Instagram / Threads / Meta AI / Muse
+  // 统一使用 Meta 策略组。
+  //
+  // WhatsApp 保持独立策略组，不归入 Meta。
+  // ============================================================
+
+  fixed["proxy-groups"].push({
+    "name": "Meta",
+    "type": "select",
+    "icon": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Meta.png",
     "proxies": [
       "🖥️ All-Nodes",
       "PROXY-Gate",
@@ -410,31 +428,9 @@ function main(config) {
   });
 
   fixed["proxy-groups"].push({
-    "name": "Facebook",
-    "type": "select",
-    "icon": "https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Facebook.png",
-    "proxies": [
-      "🖥️ All-Nodes",
-      "PROXY-Gate",
-      "DIRECT"
-    ]
-  });
-
-  fixed["proxy-groups"].push({
-    "name": "Instagram",
-    "type": "select",
-    "icon": "https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Instagram.png",
-    "proxies": [
-      "🖥️ All-Nodes",
-      "PROXY-Gate",
-      "DIRECT"
-    ]
-  });
-
-  fixed["proxy-groups"].push({
     "name": "WhatsApp",
     "type": "select",
-    "icon": "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/whatsapp.png",
+    "icon": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/WhatsApp.png",
     "proxies": [
       "🖥️ All-Nodes",
       "PROXY-Gate",
@@ -710,9 +706,8 @@ function main(config) {
     "Google",
     "Apple",
     "Amazon",
+    "Meta",
     "X",
-    "Facebook",
-    "Instagram",
     "WhatsApp",
     "Telegram",
     "Github",
@@ -1159,23 +1154,34 @@ function main(config) {
     "DOMAIN-SUFFIX,googleapis.com,Google",
     "DOMAIN-SUFFIX,googleusercontent.com,Google",
 
+    // Meta
+    // Facebook / Instagram / Threads / Meta AI / Muse
+    // 统一进入 Meta 策略组。
+    // Facebook
+    "DOMAIN-SUFFIX,facebook.com,Meta",
+    "DOMAIN-SUFFIX,facebook.net,Meta",
+    "DOMAIN-SUFFIX,fbcdn.net,Meta",
+    "DOMAIN-SUFFIX,fbsbx.com,Meta",
+    "DOMAIN-SUFFIX,fb.com,Meta",
+    // Instagram
+    "DOMAIN-SUFFIX,instagram.com,Meta",
+    "DOMAIN-SUFFIX,cdninstagram.com,Meta",
+    "DOMAIN-SUFFIX,instagram.net,Meta",
+    // Threads
+    "DOMAIN-SUFFIX,threads.com,Meta",
+    "DOMAIN-SUFFIX,threads.net,Meta",
+    // Messenger
+    "DOMAIN-SUFFIX,messenger.com,Meta",
+    // Meta AI / Muse
+    "DOMAIN-SUFFIX,meta.ai,Meta",
+    "DOMAIN-SUFFIX,ai.meta.com,Meta",
+    "DOMAIN-SUFFIX,muse.ai,Meta",
+
     // X
     "DOMAIN-SUFFIX,x.com,X",
     "DOMAIN-SUFFIX,twitter.com,X",
     "DOMAIN-SUFFIX,t.co,X",
     "DOMAIN-SUFFIX,twimg.com,X",
-
-    // Facebook
-    "DOMAIN-SUFFIX,facebook.com,Facebook",
-    "DOMAIN-SUFFIX,facebook.net,Facebook",
-    "DOMAIN-SUFFIX,fbcdn.net,Facebook",
-    "DOMAIN-SUFFIX,fbsbx.com,Facebook",
-    "DOMAIN-SUFFIX,fb.com,Facebook",
-
-    // Instagram
-    "DOMAIN-SUFFIX,instagram.com,Instagram",
-    "DOMAIN-SUFFIX,cdninstagram.com,Instagram",
-    "DOMAIN-SUFFIX,instagram.net,Instagram",
 
     // WhatsApp
     "DOMAIN-SUFFIX,whatsapp.com,WhatsApp",
