@@ -1,7 +1,8 @@
 /* Runestone V3 — routing-only Hako post-merge override.
  * Import the raw JavaScript URL, save, and select it after node-source merging.
- * Network settings and node objects are retained. Rules and groups are replaced.
- * URL import is a snapshot: re-import to upgrade. See docs/RUNESTONE_V3.md.
+ * Hako owns DNS, TUN, tun.stack, ports, interfaces and node objects; this script
+ * retains them, enables rule mode/selection persistence, and rebuilds routing.
+ * URL import is a snapshot: re-import the script when upgrading.
  */
 const RUNESTONE = {repository: "kiki-rgb-00/kiki", personal: false};
 
@@ -912,11 +913,19 @@ function main(config) {
     "DOMAIN-SUFFIX,fbcdn.net,Facebook",
     "DOMAIN-SUFFIX,fbsbx.com,Facebook",
     "DOMAIN-SUFFIX,fb.com,Facebook",
+    "DOMAIN-SUFFIX,messenger.com,Facebook",
+    "DOMAIN-SUFFIX,meta.ai,Facebook",
+    "DOMAIN-SUFFIX,ai.meta.com,Facebook",
+    "DOMAIN-SUFFIX,muse.ai,Facebook",
 
     // Instagram
     "DOMAIN-SUFFIX,instagram.com,Instagram",
     "DOMAIN-SUFFIX,cdninstagram.com,Instagram",
     "DOMAIN-SUFFIX,instagram.net,Instagram",
+
+    // Threads 保持独立，沿用 V3 的精细策略组。
+    "DOMAIN-SUFFIX,threads.com,Threads",
+    "DOMAIN-SUFFIX,threads.net,Threads",
 
     // WhatsApp
     "DOMAIN-SUFFIX,whatsapp.com,WhatsApp",
