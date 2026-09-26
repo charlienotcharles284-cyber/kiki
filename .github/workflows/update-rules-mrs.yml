@@ -26,10 +26,14 @@ jobs:
           mkdir -p MRS
           mkdir -p Rules
 
+      # =========================
+      # Download Mihomo
+      # =========================
+
       - name: Download Mihomo
         run: |
           wget -O mihomo.gz \
-            https://github.com/MetaCubeX/mihomo/releases/download/v1.19.30/mihomo-linux-amd64-v1-v1.19.30.gz
+            https://github.com/MetaCubeX/mihomo/releases/download/v1.19.31/mihomo-linux-amd64-v1-v1.19.31.gz
           gzip -d mihomo.gz
           chmod +x mihomo
 
@@ -86,7 +90,7 @@ jobs:
       - name: Convert Microsoft Rules
         run: |
           ./mihomo convert-ruleset \
-            classical yaml \
+            domain yaml \
             Rules/Microsoft_Filtered.yaml \
             MRS/Microsoft.mrs
 
@@ -99,12 +103,26 @@ jobs:
           wget -O Rules/Copilot.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
 
-      - name: Convert Copilot Rules
+      - name: Filter Copilot Rules
+        run: |
+          python scripts/filter-copilot.py \
+            Rules/Copilot.yaml \
+            Rules/Copilot_Domain.yaml \
+            Rules/Copilot_IP.yaml
+
+      - name: Convert Copilot Domain Rules
         run: |
           ./mihomo convert-ruleset \
-            classical yaml \
-            Rules/Copilot.yaml \
-            MRS/Copilot.mrs
+            domain yaml \
+            Rules/Copilot_Domain.yaml \
+            MRS/Copilot_Domain.mrs
+
+      - name: Convert Copilot IP Rules
+        run: |
+          ./mihomo convert-ruleset \
+            ipcidr yaml \
+            Rules/Copilot_IP.yaml \
+            MRS/Copilot_IP.mrs
 
       # =========================
       # ChinaMax
