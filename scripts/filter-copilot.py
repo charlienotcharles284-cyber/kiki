@@ -27,6 +27,15 @@ def get_rule_type(rule):
     return parts[0].strip().upper()
 
 
+def get_rule_value(rule):
+    parts = rule.split(",", 2)
+
+    if len(parts) < 2:
+        return ""
+
+    return parts[1].strip()
+
+
 def main():
     if len(sys.argv) != 4:
         print(
@@ -57,12 +66,32 @@ def main():
 
     for rule in payload:
         rule_type = get_rule_type(rule)
+        rule_value = get_rule_value(rule)
+
+        # =========================
+        # Domain rules
+        # =========================
 
         if rule_type in DOMAIN_TYPES:
             domain_rules.append(rule)
 
+        # =========================
+        # IP-CIDR rules
+        # =========================
+
         elif rule_type in IP_TYPES:
-            ip_rules.append(rule)
+            if rule_value:
+                # MRS ipcidr YAML requires
+                # the raw CIDR value only.
+                ip_rules.append(rule_value)
+            else:
+                removed_counts["EMPTY-IP-CIDR"] = (
+                    removed_counts.get("EMPTY-IP-CIDR", 0) + 1
+                )
+
+        # =========================
+        # Unsupported rules
+        # =========================
 
         else:
             if rule_type is None:
@@ -70,7 +99,9 @@ def main():
             else:
                 reason = rule_type
 
-            removed_counts[reason] = removed_counts.get(reason, 0) + 1
+            removed_counts[reason] = (
+                removed_counts.get(reason, 0) + 1
+            )
 
     domain_data = {
         "payload": domain_rules
