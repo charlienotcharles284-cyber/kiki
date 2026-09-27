@@ -225,6 +225,22 @@ jobs:
             MRS/Apple_Domain.mrs
 
       # =========================
+      # iCloud
+      # =========================
+
+      - name: Download iCloud Rules
+        run: |
+          wget -O Rules/iCloud.yaml \
+            https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/iCloud/iCloud.yaml
+
+      - name: Convert iCloud Rules
+        run: |
+          ./mihomo convert-ruleset \
+            domain yaml \
+            Rules/iCloud.yaml \
+            MRS/iCloud.mrs
+
+      # =========================
       # Service Rules
       # =========================
 
