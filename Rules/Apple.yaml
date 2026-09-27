@@ -16,7 +16,6 @@ payload:
   - DOMAIN-KEYWORD,buy.itunes.apple.com
   - DOMAIN-KEYWORD,smp-device
   - DOMAIN-KEYWORD,testflight
-  - DOMAIN-KEYWORD,icloud.com.akadns.net
   - IP-CIDR,139.178.128.0/18
   - IP-CIDR,144.178.0.0/19
   - IP-CIDR,144.178.36.0/22
