@@ -260,6 +260,18 @@ function main(config) {
     ]
   });
 
+  // iCloud 紧跟 Apple
+  fixed["proxy-groups"].push({
+    "name": "iCloud",
+    "type": "select",
+    "icon": "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/iCloud.png",
+    "proxies": [
+      "🖥️ All-Nodes",
+      "PROXY-Gate",
+      "DIRECT"
+    ]
+  });
+
   fixed["proxy-groups"].push({
     "name": "X",
     "type": "select",
@@ -271,21 +283,19 @@ function main(config) {
     ]
   });
 
-  fixed["proxy-groups"].push({
-    "name": "Facebook",
-    "type": "select",
-    "icon": "https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Facebook.png",
-    "proxies": [
-      "🖥️ All-Nodes",
-      "PROXY-Gate",
-      "DIRECT"
-    ]
-  });
+  // ============================================================
+  // Meta
+  //
+  // Facebook / Instagram / Threads / Messenger /
+  // Meta AI / Muse 统一使用 Meta 策略组。
+  //
+  // WhatsApp 保持独立策略组，不归入 Meta。
+  // ============================================================
 
   fixed["proxy-groups"].push({
-    "name": "Instagram",
+    "name": "Meta",
     "type": "select",
-    "icon": "https://fastly.jsdelivr.net/gh/Koolson/Qure/IconSet/Color/Instagram.png",
+    "icon": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Ti/Meta.png",
     "proxies": [
       "🖥️ All-Nodes",
       "PROXY-Gate",
@@ -500,9 +510,9 @@ function main(config) {
     "Grok",
     "Google",
     "Apple",
+    "iCloud",
     "X",
-    "Facebook",
-    "Instagram",
+    "Meta",
     "WhatsApp",
     "Telegram",
     "Github",
@@ -586,9 +596,7 @@ function main(config) {
     "IP-CIDR6,2403:300:a51::/48,Apple Push,no-resolve",
     "IP-CIDR6,2a01:b740:a42::/48,Apple Push,no-resolve",
 
-    // 普通 Apple 流量进入 Apple 策略组
-    "RULE-SET,Apple,Apple",
-    "RULE-SET,Apple_Domain,Apple",
+
 
     // 广告 / 隐私
     "RULE-SET,AdvertisingLite,REJECT",
@@ -778,6 +786,13 @@ function main(config) {
     // Grok
     "DOMAIN-SUFFIX,grok.com,Grok",
     "DOMAIN-SUFFIX,x.ai,Grok",
+    
+    // 普通 Apple 流量进入 Apple 策略组
+    "RULE-SET,Apple,Apple",
+    "RULE-SET,Apple_Domain,Apple",
+
+    // iCloud
+    "RULE-SET,iCloud,iCloud",
 
     // Google
     "DOMAIN-SUFFIX,gmail.com,Google",
@@ -792,17 +807,38 @@ function main(config) {
     "DOMAIN-SUFFIX,t.co,X",
     "DOMAIN-SUFFIX,twimg.com,X",
 
+    // ============================================================
+    // Meta
+    //
+    // Facebook / Instagram / Threads / Messenger /
+    // Meta AI / Muse 统一进入 Meta 策略组。
+    //
+    // WhatsApp 保持独立，不归入 Meta。
+    // ============================================================
+
     // Facebook
-    "DOMAIN-SUFFIX,facebook.com,Facebook",
-    "DOMAIN-SUFFIX,facebook.net,Facebook",
-    "DOMAIN-SUFFIX,fbcdn.net,Facebook",
-    "DOMAIN-SUFFIX,fbsbx.com,Facebook",
-    "DOMAIN-SUFFIX,fb.com,Facebook",
+    "DOMAIN-SUFFIX,facebook.com,Meta",
+    "DOMAIN-SUFFIX,facebook.net,Meta",
+    "DOMAIN-SUFFIX,fbcdn.net,Meta",
+    "DOMAIN-SUFFIX,fbsbx.com,Meta",
+    "DOMAIN-SUFFIX,fb.com,Meta",
 
     // Instagram
-    "DOMAIN-SUFFIX,instagram.com,Instagram",
-    "DOMAIN-SUFFIX,cdninstagram.com,Instagram",
-    "DOMAIN-SUFFIX,instagram.net,Instagram",
+    "DOMAIN-SUFFIX,instagram.com,Meta",
+    "DOMAIN-SUFFIX,cdninstagram.com,Meta",
+    "DOMAIN-SUFFIX,instagram.net,Meta",
+
+    // Threads
+    "DOMAIN-SUFFIX,threads.com,Meta",
+    "DOMAIN-SUFFIX,threads.net,Meta",
+
+    // Messenger
+    "DOMAIN-SUFFIX,messenger.com,Meta",
+
+    // Meta AI / Muse
+    "DOMAIN-SUFFIX,meta.ai,Meta",
+    "DOMAIN-SUFFIX,ai.meta.com,Meta",
+    "DOMAIN-SUFFIX,muse.ai,Meta",
 
     // WhatsApp
     "DOMAIN-SUFFIX,whatsapp.com,WhatsApp",
@@ -867,7 +903,7 @@ function main(config) {
       "behavior": "classical",
       "format": "yaml",
       "interval": 86400,
-      "url": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml"
+      "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Rules/Apple.yaml"
     },
 
     "Apple_Domain": {
@@ -876,6 +912,14 @@ function main(config) {
       "format": "mrs",
       "interval": 86400,
       "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Apple_Domain.mrs"
+    },
+
+    "iCloud": {
+      "type": "http",
+      "behavior": "domain",
+      "format": "mrs",
+      "interval": 86400,
+      "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/iCloud.mrs"
     },
 
     "AdvertisingLite": {
@@ -985,7 +1029,14 @@ function main(config) {
 
   fixed.rules = [...new Set(fixed.rules)];
 
-  const added = ["Pixiv", "LinkedIn", "Threads"];
+  // ============================================================
+  // Additional project-owned services
+  //
+  // Threads 已经并入 Meta，因此不再生成独立 Threads 策略组。
+  // Pixiv / LinkedIn 继续保持原来的独立策略组。
+  // ============================================================
+
+  const added = ["Pixiv", "LinkedIn"];
 
   added.forEach(name => {
     fixed["rule-providers"][name + "_Domain"] = {
@@ -1011,8 +1062,7 @@ function main(config) {
 
   const serviceIcons = {
     Pixiv: "https://www.google.com/s2/favicons?domain=www.pixiv.net&sz=128",
-    LinkedIn: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/linkedin.png",
-    Threads: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/threads.png"
+    LinkedIn: "https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/png/linkedin.png"
   };
 
   const addedGroups = added.map(name => ({
@@ -1071,10 +1121,7 @@ function main(config) {
     Google: ["JP", "SG", "HK"],
     Github: ["JP", "SG", "HK", "US"],
     X: ["JP", "TW", "SG"],
-    Pixiv: ["JP", "TW", "SG"],
-    Facebook: ["SG", "JP", "US"],
-    Instagram: ["SG", "JP", "US"],
-    Threads: ["SG", "JP", "US"],
+    Meta: ["SG", "JP", "US"],
     WhatsApp: ["SG", "JP", "HK"],
     Telegram: ["SG", "JP", "HK"],
     LinkedIn: ["SG", "US", "UK"]
