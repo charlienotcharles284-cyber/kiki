@@ -831,47 +831,6 @@ function main(config) {
     "IP-CIDR6,2403:300:a51::/48,Apple Push,no-resolve",
     "IP-CIDR6,2a01:b740:a42::/48,Apple Push,no-resolve",
 
-    // 普通 Apple 流量
-    "RULE-SET,Apple,Apple",
-    "RULE-SET,Apple_Domain,Apple",
-
-    // iCloud
-    "RULE-SET,iCloud,iCloud",
-
-    // ========================================================
-    // Amazon
-    // ========================================================
-
-    "DOMAIN-SUFFIX,amazon.com,Amazon",
-    "DOMAIN-SUFFIX,amazon.co.uk,Amazon",
-    "DOMAIN-SUFFIX,amazon.de,Amazon",
-    "DOMAIN-SUFFIX,amazon.fr,Amazon",
-    "DOMAIN-SUFFIX,amazon.it,Amazon",
-    "DOMAIN-SUFFIX,amazon.es,Amazon",
-    "DOMAIN-SUFFIX,amazon.co.jp,Amazon",
-    "DOMAIN-SUFFIX,amazon.ca,Amazon",
-    "DOMAIN-SUFFIX,amazon.com.au,Amazon",
-    "DOMAIN-SUFFIX,amazon.in,Amazon",
-    "DOMAIN-SUFFIX,amazon.com.mx,Amazon",
-    "DOMAIN-SUFFIX,amazon.com.br,Amazon",
-    "DOMAIN-SUFFIX,amazon.nl,Amazon",
-    "DOMAIN-SUFFIX,amazon.pl,Amazon",
-    "DOMAIN-SUFFIX,amazon.se,Amazon",
-    "DOMAIN-SUFFIX,amazon.sg,Amazon",
-    "DOMAIN-SUFFIX,amazon.ae,Amazon",
-    "DOMAIN-SUFFIX,amazon.sa,Amazon",
-    "DOMAIN-SUFFIX,amazon.com.tr,Amazon",
-    "DOMAIN-SUFFIX,amazon.eg,Amazon",
-    "DOMAIN-SUFFIX,amazon.co.za,Amazon",
-
-    "DOMAIN-SUFFIX,images-amazon.com,Amazon",
-    "DOMAIN-SUFFIX,ssl-images-amazon.com,Amazon",
-    "DOMAIN-SUFFIX,media-amazon.com,Amazon",
-    "DOMAIN-SUFFIX,amazon-adsystem.com,Amazon",
-
-    "DOMAIN-SUFFIX,amazonpay.com,Amazon",
-    "DOMAIN-SUFFIX,amazonpay.in,Amazon",
-    "DOMAIN-SUFFIX,amazonpay.com.br,Amazon",
 
     // 广告 / 隐私
     "RULE-SET,AdvertisingLite,REJECT",
@@ -1041,6 +1000,48 @@ function main(config) {
     "DOMAIN-SUFFIX,grok.com,Grok",
     "DOMAIN-SUFFIX,x.ai,Grok",
     "DOMAIN-KEYWORD,grok,Grok",
+    
+    // Apple 
+    "RULE-SET,Apple,Apple",
+    "RULE-SET,Apple_Domain,Apple",
+
+    // iCloud
+    "RULE-SET,iCloud,iCloud",
+
+    // ========================================================
+    // Amazon
+    // ========================================================
+
+    "DOMAIN-SUFFIX,amazon.com,Amazon",
+    "DOMAIN-SUFFIX,amazon.co.uk,Amazon",
+    "DOMAIN-SUFFIX,amazon.de,Amazon",
+    "DOMAIN-SUFFIX,amazon.fr,Amazon",
+    "DOMAIN-SUFFIX,amazon.it,Amazon",
+    "DOMAIN-SUFFIX,amazon.es,Amazon",
+    "DOMAIN-SUFFIX,amazon.co.jp,Amazon",
+    "DOMAIN-SUFFIX,amazon.ca,Amazon",
+    "DOMAIN-SUFFIX,amazon.com.au,Amazon",
+    "DOMAIN-SUFFIX,amazon.in,Amazon",
+    "DOMAIN-SUFFIX,amazon.com.mx,Amazon",
+    "DOMAIN-SUFFIX,amazon.com.br,Amazon",
+    "DOMAIN-SUFFIX,amazon.nl,Amazon",
+    "DOMAIN-SUFFIX,amazon.pl,Amazon",
+    "DOMAIN-SUFFIX,amazon.se,Amazon",
+    "DOMAIN-SUFFIX,amazon.sg,Amazon",
+    "DOMAIN-SUFFIX,amazon.ae,Amazon",
+    "DOMAIN-SUFFIX,amazon.sa,Amazon",
+    "DOMAIN-SUFFIX,amazon.com.tr,Amazon",
+    "DOMAIN-SUFFIX,amazon.eg,Amazon",
+    "DOMAIN-SUFFIX,amazon.co.za,Amazon",
+
+    "DOMAIN-SUFFIX,images-amazon.com,Amazon",
+    "DOMAIN-SUFFIX,ssl-images-amazon.com,Amazon",
+    "DOMAIN-SUFFIX,media-amazon.com,Amazon",
+    "DOMAIN-SUFFIX,amazon-adsystem.com,Amazon",
+
+    "DOMAIN-SUFFIX,amazonpay.com,Amazon",
+    "DOMAIN-SUFFIX,amazonpay.in,Amazon",
+    "DOMAIN-SUFFIX,amazonpay.com.br,Amazon",
 
     // Google
     "DOMAIN-KEYWORD,google,Google",
@@ -1138,10 +1139,6 @@ function main(config) {
       "behavior": "classical",
       "format": "yaml",
       "interval": 86400,
-
-      // 使用你自己的自动过滤版本。
-      // 这里不能继续直接使用 BlackMatrix7 上游，
-      // 否则 Apple.yaml 中的 iCloud 规则会重新进入。
       "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Rules/Apple.yaml"
     },
 
