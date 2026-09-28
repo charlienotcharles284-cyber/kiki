@@ -208,7 +208,8 @@ function main(config) {
   //
   // 因此：
   // 没有法国节点 → 不会出现 FR-Auto
-  // 没有俄罗斯节点 → 不会出现 RU-Auto
+  // 只有 1 个法国节点 → 不会出现 FR-Auto
+  // 有 2 个法国节点 → 生成 FR-Auto
   // ============================================================
 
   fixed["proxy-groups"].push({
@@ -373,11 +374,33 @@ function main(config) {
     ]
   });
 
-  // 注意：这里只修改普通 Apple 策略组图标。
+  // ============================================================
+  // Apple
+  // ============================================================
+
   fixed["proxy-groups"].push({
     "name": "Apple",
     "type": "select",
     "icon": "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple_2.png",
+    "proxies": [
+      "🖥️ All-Nodes",
+      "PROXY-Gate",
+      "DIRECT"
+    ]
+  });
+
+  // ============================================================
+  // iCloud
+  //
+  // 独立于 Apple 策略组。
+  // 规则来源：
+  // MRS/iCloud.mrs
+  // ============================================================
+
+  fixed["proxy-groups"].push({
+    "name": "iCloud",
+    "type": "select",
+    "icon": "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/iCloud.png",
     "proxies": [
       "🖥️ All-Nodes",
       "PROXY-Gate",
@@ -476,12 +499,11 @@ function main(config) {
   //
   // 直接读取 Hako 合并后的完整 config.proxies。
   //
-  // 只有匹配到 3 个及以上节点才生成对应地区 Auto。
+  // 现在改为：
   //
-  // 少于 3 个：
-  // - 不生成 Auto
-  // - 不加入服务策略组
-  // - 不加入 APNs-Fallback
+  // 2 个及以上节点 → 生成 Auto
+  // 1 个节点         → 不生成
+  // 0 个节点         → 不生成
   //
   // 所有 Auto 组统一使用 Auto.png 图标。
   // ============================================================
@@ -644,8 +666,8 @@ function main(config) {
 
     const autoName = region.name + "-Auto";
 
-    // 只有 3 个及以上节点才生成该地区 Auto。
-    if (matched.length < 3) {
+    // 现在只要有 2 个及以上节点，就生成该地区 Auto。
+    if (matched.length < 2) {
       return;
     }
 
@@ -659,8 +681,6 @@ function main(config) {
       tolerance: 50
     });
 
-    // 这里只记录实际生成的 Auto。
-    // 后续服务策略组和 APNs-Fallback 都只引用这个数组。
     existingRegionalAutos.push(autoName);
   });
 
@@ -706,6 +726,7 @@ function main(config) {
     "Outlook",
     "Google",
     "Apple",
+    "iCloud",
     "Amazon",
     "Meta",
     "X",
@@ -732,8 +753,6 @@ function main(config) {
   // 🇸🇬 SG-Auto
   // ...
   // DIRECT
-  //
-  // Global-Fallback 同样只是一个可手动选择的出口。
   // ============================================================
 
   const proxyGate = fixed["proxy-groups"].find(
@@ -756,7 +775,7 @@ function main(config) {
   //
   // 只引用实际生成的地区 Auto。
   //
-  // 少于 3 个节点的地区不会出现在这里。
+  // 现在地区只需要 2 个节点即可进入这里。
   // ============================================================
 
   fixed["proxy-groups"].push({
@@ -772,18 +791,6 @@ function main(config) {
   // 7. Global-Fallback
   //
   // 放在整个策略组列表最后，与 APNs-Fallback 相邻。
-  //
-  // 它引用地区 Auto，而不是直接引用原始节点。
-  //
-  // 因此逻辑为：
-  //
-  // 地区内部：
-  //     US-Auto → 自动选择 US 地区可用节点
-  //
-  // 地区之间：
-  //     US-Auto → SG-Auto → HK-Auto → ...
-  //
-  // 只有用户主动选择 🌍 Global-Fallback 时才启用。
   // ============================================================
 
   if (existingRegionalAutos.length) {
@@ -808,7 +815,7 @@ function main(config) {
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
     "GEOIP,LAN,DIRECT,no-resolve",
 
-    // Apple Push 必须在普通 Apple 规则之前
+    // Apple Push 必须在普通 Apple / iCloud 规则之前
     "DOMAIN-SUFFIX,push.apple.com,Apple Push",
     "DOMAIN-SUFFIX,push-apple.com.akadns.net,Apple Push",
     "DOMAIN-KEYWORD,apple.com.edgekey.net,Apple Push",
@@ -824,16 +831,15 @@ function main(config) {
     "IP-CIDR6,2403:300:a51::/48,Apple Push,no-resolve",
     "IP-CIDR6,2a01:b740:a42::/48,Apple Push,no-resolve",
 
-    // 普通 Apple 流量进入 Apple 策略组
+    // 普通 Apple 流量
     "RULE-SET,Apple,Apple",
     "RULE-SET,Apple_Domain,Apple",
 
+    // iCloud
+    "RULE-SET,iCloud,iCloud",
+
     // ========================================================
     // Amazon
-    //
-    // 国际 Amazon 站点及其常用资源域名。
-    // 不将 amazonaws.com 整体纳入 Amazon，
-    // 避免接管与 Amazon 商城无关的 AWS 流量。
     // ========================================================
 
     "DOMAIN-SUFFIX,amazon.com,Amazon",
@@ -858,13 +864,11 @@ function main(config) {
     "DOMAIN-SUFFIX,amazon.eg,Amazon",
     "DOMAIN-SUFFIX,amazon.co.za,Amazon",
 
-    // Amazon 常用内容 / 静态资源
     "DOMAIN-SUFFIX,images-amazon.com,Amazon",
     "DOMAIN-SUFFIX,ssl-images-amazon.com,Amazon",
     "DOMAIN-SUFFIX,media-amazon.com,Amazon",
     "DOMAIN-SUFFIX,amazon-adsystem.com,Amazon",
 
-    // Amazon Pay
     "DOMAIN-SUFFIX,amazonpay.com,Amazon",
     "DOMAIN-SUFFIX,amazonpay.in,Amazon",
     "DOMAIN-SUFFIX,amazonpay.com.br,Amazon",
@@ -930,7 +934,6 @@ function main(config) {
     "DOMAIN-SUFFIX,spclient.wg.spotify.com,Spotify",
     "DOMAIN-SUFFIX,api-partner.spotify.com,Spotify",
     "DOMAIN-SUFFIX,heads4-ak-spotify-com.akamaized.net,Spotify",
-    "DOMAIN-SUFFIX,spotifycdn.com,Spotify",
 
     // TikTok
     "DOMAIN-SUFFIX,tiktok.com,TikTok",
@@ -997,30 +1000,12 @@ function main(config) {
     "DOMAIN-SUFFIX,claudeusercontent.com,Claude",
     "DOMAIN-SUFFIX,claudeusercontent.com.cdn.cloudflare.net,Claude",
 
-    // ========================================================
     // Microsoft / Copilot
-    //
-    // Microsoft.mrs / Copilot_Domain.mrs / Copilot_IP.mrs
-    // 统一进入 Microsoft 策略组。
-    //
-    // 注意：
-    // Microsoft.mrs 已经在构建阶段排除了 OneDrive、
-    // Outlook、PROCESS-NAME、DOMAIN-KEYWORD 等不需要
-    // 进入该 MRS 的规则。
-    // ========================================================
-
     "RULE-SET,Copilot_Domain,Microsoft",
     "RULE-SET,Copilot_IP,Microsoft",
     "RULE-SET,Microsoft,Microsoft",
 
-    // ========================================================
     // OneDrive
-    //
-    // 明确的 OneDrive 域名。
-    // SharePoint / SharePoint Online 不放入这里，
-    // 保留给 Microsoft。
-    // ========================================================
-
     "DOMAIN-SUFFIX,1drv.com,OneDrive",
     "DOMAIN-SUFFIX,1drv.ms,OneDrive",
     "DOMAIN-SUFFIX,livefilestore.com,OneDrive",
@@ -1038,12 +1023,7 @@ function main(config) {
     "DOMAIN-SUFFIX,storage.live.com,OneDrive",
     "DOMAIN-SUFFIX,storage.msn.com,OneDrive",
 
-    // ========================================================
     // Outlook
-    //
-    // 明确的 Outlook / Hotmail / Outlook Mobile 域名。
-    // ========================================================
-
     "DOMAIN-SUFFIX,acompli.com,Outlook",
     "DOMAIN-SUFFIX,acompli.net,Outlook",
     "DOMAIN-SUFFIX,hotmail.com,Outlook",
@@ -1068,27 +1048,23 @@ function main(config) {
     "DOMAIN-SUFFIX,googleusercontent.com,Google",
     "DOMAIN-SUFFIX,gstatic.com,Google",
     "DOMAIN-SUFFIX,googleapis.com,Google",
-    "DOMAIN-SUFFIX,googleusercontent.com,Google",
 
     // Meta
-    // Facebook / Instagram / Threads / Meta AI / Muse
-    // 统一进入 Meta 策略组。
-    // Facebook
     "DOMAIN-SUFFIX,facebook.com,Meta",
     "DOMAIN-SUFFIX,facebook.net,Meta",
     "DOMAIN-SUFFIX,fbcdn.net,Meta",
     "DOMAIN-SUFFIX,fbsbx.com,Meta",
     "DOMAIN-SUFFIX,fb.com,Meta",
-    // Instagram
+
     "DOMAIN-SUFFIX,instagram.com,Meta",
     "DOMAIN-SUFFIX,cdninstagram.com,Meta",
     "DOMAIN-SUFFIX,instagram.net,Meta",
-    // Threads
+
     "DOMAIN-SUFFIX,threads.com,Meta",
     "DOMAIN-SUFFIX,threads.net,Meta",
-    // Messenger
+
     "DOMAIN-SUFFIX,messenger.com,Meta",
-    // Meta AI / Muse
+
     "DOMAIN-SUFFIX,meta.ai,Meta",
     "DOMAIN-SUFFIX,ai.meta.com,Meta",
     "DOMAIN-SUFFIX,muse.ai,Meta",
@@ -1162,7 +1138,11 @@ function main(config) {
       "behavior": "classical",
       "format": "yaml",
       "interval": 86400,
-      "url": "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml"
+
+      // 使用你自己的自动过滤版本。
+      // 这里不能继续直接使用 BlackMatrix7 上游，
+      // 否则 Apple.yaml 中的 iCloud 规则会重新进入。
+      "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/Rules/Apple.yaml"
     },
 
     "Apple_Domain": {
@@ -1171,6 +1151,14 @@ function main(config) {
       "format": "mrs",
       "interval": 86400,
       "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Apple_Domain.mrs"
+    },
+
+    "iCloud": {
+      "type": "http",
+      "behavior": "domain",
+      "format": "mrs",
+      "interval": 86400,
+      "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/iCloud.mrs"
     },
 
     "AdvertisingLite": {
