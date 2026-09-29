@@ -1036,12 +1036,12 @@ function main(config) {
     "DOMAIN-SUFFIX,x.ai,Grok",
     "DOMAIN-KEYWORD,grok,Grok",
 
+    // iCloud
+    "RULE-SET,iCloud,iCloud",
+
     // Apple
     "RULE-SET,Apple,Apple",
     "RULE-SET,Apple_Domain,Apple",
-
-    // iCloud
-    "RULE-SET,iCloud,iCloud",
 
     // ========================================================
     // Amazon
