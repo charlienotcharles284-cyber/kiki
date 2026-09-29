@@ -76,7 +76,9 @@ jobs:
 
       # =========================
       # Microsoft
-      # Temporary build files
+      #
+      # Clash classical YAML
+      # -> MRS-compatible domain text
       # =========================
 
       - name: Download Microsoft Rules
@@ -84,22 +86,25 @@ jobs:
           wget -O .tmp/rules/Microsoft.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml
 
-      - name: Filter Microsoft Rules
+      - name: Prepare Microsoft Domain Rules
         run: |
           python scripts/filter-microsoft.py \
             .tmp/rules/Microsoft.yaml \
-            .tmp/rules/Microsoft_Filtered.yaml
+            .tmp/rules/Microsoft_Domain.txt
 
       - name: Convert Microsoft Rules
         run: |
           ./mihomo convert-ruleset \
-            domain yaml \
-            .tmp/rules/Microsoft_Filtered.yaml \
+            domain text \
+            .tmp/rules/Microsoft_Domain.txt \
             MRS/Microsoft.mrs
 
       # =========================
       # Copilot
-      # Temporary build files
+      #
+      # Clash classical YAML
+      # -> Domain text
+      # -> IP-CIDR text
       # =========================
 
       - name: Download Copilot Rules
@@ -107,30 +112,35 @@ jobs:
           wget -O .tmp/rules/Copilot.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
 
-      - name: Filter Copilot Rules
+      - name: Prepare Copilot Rules
         run: |
           python scripts/filter-copilot.py \
             .tmp/rules/Copilot.yaml \
-            .tmp/rules/Copilot_Domain.yaml \
-            .tmp/rules/Copilot_IP.yaml
+            .tmp/rules/Copilot_Domain.txt \
+            .tmp/rules/Copilot_IP.txt
 
       - name: Convert Copilot Domain Rules
         run: |
           ./mihomo convert-ruleset \
-            domain yaml \
-            .tmp/rules/Copilot_Domain.yaml \
+            domain text \
+            .tmp/rules/Copilot_Domain.txt \
             MRS/Copilot_Domain.mrs
 
       - name: Convert Copilot IP Rules
         run: |
           ./mihomo convert-ruleset \
-            ipcidr yaml \
-            .tmp/rules/Copilot_IP.yaml \
+            ipcidr text \
+            .tmp/rules/Copilot_IP.txt \
             MRS/Copilot_IP.mrs
 
       # =========================
       # Emby
-      # Keep as repository rule source
+      #
+      # Keep Emby.yaml as repository
+      # rule source.
+      #
+      # Clash classical YAML
+      # -> MRS-compatible domain text
       # =========================
 
       - name: Download Emby Rules
@@ -138,22 +148,26 @@ jobs:
           wget -O Rules/Emby.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Emby/Emby.yaml
 
-      - name: Filter Emby Rules
+      - name: Prepare Emby Domain Rules
         run: |
           python scripts/filter-emby.py \
-            Rules/Emby.yaml
+            Rules/Emby.yaml \
+            .tmp/rules/Emby_Domain.txt
 
       - name: Convert Emby Rules
         run: |
           ./mihomo convert-ruleset \
-            domain yaml \
-            Rules/Emby.yaml \
+            domain text \
+            .tmp/rules/Emby_Domain.txt \
             MRS/Emby.mrs
 
       # =========================
       # ChinaMax
-      # ChinaMax.yaml is kept as repository rule source
-      # Domain/IP files are temporary build files
+      # ChinaMax.yaml is kept as
+      # repository rule source.
+      #
+      # Domain/IP files are temporary
+      # build files.
       # =========================
 
       - name: Download ChinaMax Domain
@@ -186,7 +200,8 @@ jobs:
 
       # =========================
       # Privacy
-      # Privacy.yaml is kept as repository rule source
+      # Privacy.yaml is kept as
+      # repository rule source.
       # =========================
 
       - name: Download Privacy Domain
@@ -203,7 +218,8 @@ jobs:
 
       # =========================
       # Advertising
-      # Advertising.yaml is kept as repository rule source
+      # Advertising.yaml is kept as
+      # repository rule source.
       # =========================
 
       - name: Download Advertising Domain
@@ -220,7 +236,8 @@ jobs:
 
       # =========================
       # AdvertisingLite
-      # AdvertisingLite.yaml is kept as repository rule source
+      # AdvertisingLite.yaml is kept as
+      # repository rule source.
       # =========================
 
       - name: Download AdvertisingLite Domain
@@ -250,8 +267,10 @@ jobs:
 
       # =========================
       # iCloud
-      # Keep iCloud.yaml because it is part of
-      # the Apple/iCloud separation logic
+      #
+      # Keep iCloud.yaml because it is
+      # part of the Apple/iCloud
+      # separation logic.
       # =========================
 
       - name: Download iCloud Rules
@@ -260,8 +279,15 @@ jobs:
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/iCloud/iCloud.yaml
 
       # =========================
-      # Filter iCloud from Apple Rules
-      # DO NOT CHANGE THIS LOGIC
+      # Filter Apple iCloud Rules
+      #
+      # This step:
+      # 1. Removes iCloud rules from Apple.yaml
+      # 2. Filters Apple_Domain.yaml
+      # 3. Generates iCloud_Domain.txt
+      #
+      # iCloud_Domain.txt contains only
+      # MRS-compatible domain syntax.
       # =========================
 
       - name: Filter Apple iCloud Rules
@@ -271,7 +297,8 @@ jobs:
             Rules/Apple.yaml \
             Rules/Apple.yaml \
             .tmp/rules/Apple_Domain.yaml \
-            .tmp/rules/Apple_Domain_Filtered.yaml
+            .tmp/rules/Apple_Domain_Filtered.yaml \
+            .tmp/rules/iCloud_Domain.txt
 
       # =========================
       # Convert Apple Domain
@@ -286,13 +313,21 @@ jobs:
 
       # =========================
       # Convert iCloud
+      #
+      # IMPORTANT:
+      # Do NOT feed the classical
+      # iCloud.yaml directly into
+      # "domain yaml".
+      #
+      # Use the generated pure-domain
+      # text file instead.
       # =========================
 
       - name: Convert iCloud Rules
         run: |
           ./mihomo convert-ruleset \
-            domain yaml \
-            Rules/iCloud.yaml \
+            domain text \
+            .tmp/rules/iCloud_Domain.txt \
             MRS/iCloud.mrs
 
       # =========================
@@ -305,7 +340,8 @@ jobs:
           python scripts/sync-services.py --mihomo ./mihomo
 
       # =========================
-      # Remove obsolete generated YAML files
+      # Remove obsolete generated
+      # YAML files
       # =========================
 
       - name: Remove obsolete generated YAML files
