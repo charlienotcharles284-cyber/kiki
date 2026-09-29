@@ -136,14 +136,13 @@ jobs:
       - name: Filter Emby Rules
         run: |
           python scripts/filter-emby.py \
-            Rules/Emby.yaml \
-            Rules/Emby_Filtered.yaml
+            Rules/Emby.yaml
 
       - name: Convert Emby Rules
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            Rules/Emby_Filtered.yaml \
+            Rules/Emby.yaml \
             MRS/Emby.mrs
 
       # =========================
