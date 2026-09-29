@@ -1038,6 +1038,7 @@ function main(config) {
     "DOMAIN-KEYWORD,grok,Grok",
 
     // iCloud
+    "DOMAIN-KEYWORD,icloud.com.akadns.net,iCloud",
     "RULE-SET,iCloud,iCloud",
 
     // Apple
