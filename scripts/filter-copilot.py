@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
-import sys
-import yaml
+import argparse
+import re
+from pathlib import Path
 
 
 DOMAIN_TYPES = {
@@ -15,133 +16,123 @@ IP_TYPES = {
 }
 
 
-def get_rule_type(rule):
-    if not isinstance(rule, str):
-        return None
+def normalize_domain(domain: str) -> str:
+    domain = domain.strip().strip("'\"").lower()
 
-    parts = rule.split(",", 2)
+    if domain.startswith("+."):
+        domain = domain[2:]
+    elif domain.startswith("."):
+        domain = domain[1:]
 
-    if not parts:
-        return None
-
-    return parts[0].strip().upper()
-
-
-def get_rule_value(rule):
-    parts = rule.split(",", 2)
-
-    if len(parts) < 2:
-        return ""
-
-    return parts[1].strip()
+    return domain.rstrip(".")
 
 
-def main():
-    if len(sys.argv) != 4:
-        print(
-            "Usage: python filter-copilot.py "
-            "<input.yaml> <domain-output.yaml> <ip-output.yaml>"
-        )
-        sys.exit(1)
+def parse_rule(line: str):
+    match = re.match(
+        r"^-\s*([A-Z0-9-]+)\s*,\s*(.+?)\s*$",
+        line.strip(),
+        re.IGNORECASE,
+    )
 
-    input_file = sys.argv[1]
-    domain_output = sys.argv[2]
-    ip_output = sys.argv[3]
+    if not match:
+        return None, None
 
-    with open(input_file, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
+    return (
+        match.group(1).upper(),
+        match.group(2).strip().strip("'\""),
+    )
 
-    if not isinstance(data, dict):
-        raise ValueError("Input YAML is not a valid mapping.")
 
-    payload = data.get("payload", [])
-
-    if not isinstance(payload, list):
-        raise ValueError("Input YAML does not contain a valid payload list.")
-
+def convert_rules(
+    input_path: Path,
+    domain_output: Path,
+    ip_output: Path,
+):
     domain_rules = []
     ip_rules = []
 
-    removed_counts = {}
+    for raw_line in input_path.read_text(
+        encoding="utf-8"
+    ).splitlines():
 
-    for rule in payload:
-        rule_type = get_rule_type(rule)
-        rule_value = get_rule_value(rule)
+        rule_type, value = parse_rule(raw_line)
 
-        # =========================
-        # Domain rules
-        # =========================
+        if not rule_type or not value:
+            continue
 
         if rule_type in DOMAIN_TYPES:
-            domain_rules.append(rule)
+            domain = normalize_domain(value)
 
-        # =========================
-        # IP-CIDR rules
-        # =========================
+            if rule_type == "DOMAIN":
+                domain_rules.append(domain)
+
+            elif rule_type == "DOMAIN-SUFFIX":
+                domain_rules.append(f"+.{domain}")
 
         elif rule_type in IP_TYPES:
-            if rule_value:
-                # MRS ipcidr YAML requires
-                # the raw CIDR value only.
-                ip_rules.append(rule_value)
-            else:
-                removed_counts["EMPTY-IP-CIDR"] = (
-                    removed_counts.get("EMPTY-IP-CIDR", 0) + 1
-                )
+            ip_rules.append(value)
 
-        # =========================
-        # Unsupported rules
-        # =========================
+    domain_rules = sorted(set(domain_rules))
+    ip_rules = sorted(set(ip_rules))
 
-        else:
-            if rule_type is None:
-                reason = "INVALID"
-            else:
-                reason = rule_type
-
-            removed_counts[reason] = (
-                removed_counts.get(reason, 0) + 1
-            )
-
-    domain_data = {
-        "payload": domain_rules
-    }
-
-    ip_data = {
-        "payload": ip_rules
-    }
-
-    with open(domain_output, "w", encoding="utf-8") as f:
-        yaml.safe_dump(
-            domain_data,
-            f,
-            allow_unicode=True,
-            sort_keys=False,
-            default_flow_style=False,
-        )
-
-    with open(ip_output, "w", encoding="utf-8") as f:
-        yaml.safe_dump(
-            ip_data,
-            f,
-            allow_unicode=True,
-            sort_keys=False,
-            default_flow_style=False,
-        )
-
-    print(f"Input rules          : {len(payload)}")
-    print(f"Domain rules         : {len(domain_rules)}")
-    print(f"IP-CIDR rules        : {len(ip_rules)}")
-    print(
-        f"Removed unsupported  : "
-        f"{len(payload) - len(domain_rules) - len(ip_rules)}"
+    domain_output.parent.mkdir(
+        parents=True,
+        exist_ok=True,
     )
 
-    if removed_counts:
-        print("\nRemoved by category:")
+    ip_output.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
-        for reason, count in sorted(removed_counts.items()):
-            print(f"  {reason}: {count}")
+    domain_output.write_text(
+        "\n".join(domain_rules) + "\n",
+        encoding="utf-8",
+    )
+
+    ip_output.write_text(
+        "\n".join(ip_rules) + "\n",
+        encoding="utf-8",
+    )
+
+    return domain_rules, ip_rules
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Prepare Copilot domain/IP rules for Mihomo MRS."
+    )
+
+    parser.add_argument(
+        "input",
+        type=Path,
+    )
+
+    parser.add_argument(
+        "domain_output",
+        type=Path,
+    )
+
+    parser.add_argument(
+        "ip_output",
+        type=Path,
+    )
+
+    args = parser.parse_args()
+
+    domain_rules, ip_rules = convert_rules(
+        args.input,
+        args.domain_output,
+        args.ip_output,
+    )
+
+    print(
+        f"Copilot domain rules: {len(domain_rules)}"
+    )
+
+    print(
+        f"Copilot IP-CIDR rules: {len(ip_rules)}"
+    )
 
 
 if __name__ == "__main__":
