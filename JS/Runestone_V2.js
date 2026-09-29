@@ -1038,6 +1038,13 @@ function main(config) {
     "DOMAIN-KEYWORD,grok,Grok",
 
     // iCloud
+    "DOMAIN,mask.icloud.com,iCloud",
+    "DOMAIN,mask-h2.icloud.com,iCloud",
+    "DOMAIN,mask-api.icloud.com,iCloud",
+    "DOMAIN,probe.icloud.com,iCloud",
+    "DOMAIN,pong.icloud.com,iCloud",
+    "DOMAIN,metrics.icloud.com,iCloud",
+    "DOMAIN-SUFFIX,apple-dns.net,iCloud",
     "DOMAIN-KEYWORD,icloud.com.akadns.net,iCloud",
     "RULE-SET,iCloud,iCloud",
 
