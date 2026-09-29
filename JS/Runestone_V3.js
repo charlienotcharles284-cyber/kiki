@@ -824,12 +824,13 @@ function main(config) {
     "DOMAIN-SUFFIX,grok.com,Grok",
     "DOMAIN-SUFFIX,x.ai,Grok",
     
+    
+    // iCloud
+    "RULE-SET,iCloud,iCloud",
+
     // 普通 Apple 流量进入 Apple 策略组
     "RULE-SET,Apple,Apple",
     "RULE-SET,Apple_Domain,Apple",
-
-    // iCloud
-    "RULE-SET,iCloud,iCloud",
 
     // Google
     "DOMAIN-SUFFIX,gmail.com,Google",
