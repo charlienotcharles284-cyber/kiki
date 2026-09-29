@@ -627,6 +627,7 @@ function main(config) {
     "RULE-SET,ACL4SSR_BanProgramAD,REJECT",
 
     // 加密货币App
+    "DOMAIN-SUFFIX,aicoin.com,PROXY-Gate",
     "DOMAIN-SUFFIX,coinbase.com,PROXY-Gate",
     "DOMAIN-SUFFIX,binance.com,PROXY-Gate",
     "DOMAIN-SUFFIX,kraken.com,PROXY-Gate",
