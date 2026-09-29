@@ -827,6 +827,7 @@ function main(config) {
     
     
     // iCloud
+    "DOMAIN-KEYWORD,icloud.com.akadns.net,iCloud",
     "RULE-SET,iCloud,iCloud",
 
     // 普通 Apple 流量进入 Apple 策略组
