@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 
-# 允许进入 Mihomo domain MRS 的规则类型
+# 仅保留 Mihomo domain MRS 支持的规则类型
 ALLOWED_TYPES = {
     "DOMAIN",
     "DOMAIN-SUFFIX",
@@ -46,18 +46,19 @@ def filter_emby(input_file: str, output_file: str) -> None:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # 输出标准 Clash Rule Provider YAML
+    # 写入过滤后的临时 YAML
     with output_path.open("w", encoding="utf-8", newline="\n") as f:
         f.write("payload:\n")
+
         for rule in kept_rules:
             f.write(f"  - {rule}\n")
 
-    print(f"Emby 规则过滤完成")
+    print("Emby 规则过滤完成")
     print(f"保留规则：{len(kept_rules)}")
     print(f"过滤规则：{len(removed_rules)}")
 
     if removed_rules:
-        print("\n已过滤以下规则：")
+        print("\n已过滤规则：")
         for rule in removed_rules:
             print(f"  - {rule}")
 
