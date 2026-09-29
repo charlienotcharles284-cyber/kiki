@@ -1,74 +1,113 @@
 #!/usr/bin/env python3
 
-import sys
+import argparse
+import re
 from pathlib import Path
 
 
-# 仅保留适合转换为 Mihomo domain MRS 的规则类型
-ALLOWED_TYPES = {
+DOMAIN_TYPES = {
     "DOMAIN",
     "DOMAIN-SUFFIX",
-    "DOMAIN-KEYWORD",
 }
 
 
-def filter_emby(file_path: str) -> None:
-    path = Path(file_path)
+def normalize_domain(domain: str) -> str:
+    domain = domain.strip().strip("'\"").lower()
 
-    if not path.exists():
-        print(f"错误：文件不存在：{path}", file=sys.stderr)
-        sys.exit(1)
+    if domain.startswith("+."):
+        domain = domain[2:]
+    elif domain.startswith("."):
+        domain = domain[1:]
 
-    kept_rules = []
-    removed_rules = []
+    return domain.rstrip(".")
 
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
 
-            # 跳过空行、注释和 payload:
-            if not line or line.startswith("#") or line == "payload:":
-                continue
+def convert_emby_rules(
+    input_path: Path,
+    output_path: Path,
+):
+    """
+    Convert Emby Clash classical rules into
+    Mihomo domain-rule text.
 
-            # 去掉 YAML 列表前缀
-            if line.startswith("- "):
-                rule = line[2:].strip()
-            else:
-                rule = line
+    DOMAIN        -> exact domain
+    DOMAIN-SUFFIX -> +.domain
 
-            rule_type = rule.split(",", 1)[0].strip().upper()
+    DOMAIN-KEYWORD and PROCESS-NAME are excluded.
+    """
 
-            if rule_type in ALLOWED_TYPES:
-                kept_rules.append(rule)
-            else:
-                removed_rules.append(rule)
+    rules = []
 
-    # 直接覆盖原始 Emby.yaml
-    with path.open("w", encoding="utf-8", newline="\n") as f:
-        f.write("payload:\n")
+    for raw_line in input_path.read_text(
+        encoding="utf-8"
+    ).splitlines():
 
-        for rule in kept_rules:
-            f.write(f"  - {rule}\n")
+        line = raw_line.strip()
 
-    print("Emby 规则过滤完成")
-    print(f"保留规则：{len(kept_rules)}")
-    print(f"过滤规则：{len(removed_rules)}")
+        match = re.match(
+            r"^-\s*([A-Z0-9-]+)\s*,\s*(.+?)\s*$",
+            line,
+            re.IGNORECASE,
+        )
 
-    if removed_rules:
-        print("\n已过滤规则：")
-        for rule in removed_rules:
-            print(f"  - {rule}")
+        if not match:
+            continue
+
+        rule_type = match.group(1).upper()
+        value = normalize_domain(match.group(2))
+
+        if rule_type not in DOMAIN_TYPES:
+            continue
+
+        if not value:
+            continue
+
+        if rule_type == "DOMAIN":
+            rules.append(value)
+
+        elif rule_type == "DOMAIN-SUFFIX":
+            rules.append(f"+.{value}")
+
+    rules = sorted(set(rules))
+
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    output_path.write_text(
+        "\n".join(rules) + "\n",
+        encoding="utf-8",
+    )
+
+    return rules
 
 
 def main():
-    if len(sys.argv) != 2:
-        print(
-            f"用法：python {Path(sys.argv[0]).name} <Emby.yaml>",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Prepare Emby domain rules for Mihomo MRS."
+    )
 
-    filter_emby(sys.argv[1])
+    parser.add_argument(
+        "input",
+        type=Path,
+    )
+
+    parser.add_argument(
+        "output",
+        type=Path,
+    )
+
+    args = parser.parse_args()
+
+    rules = convert_emby_rules(
+        args.input,
+        args.output,
+    )
+
+    print(
+        f"Emby MRS domain rules: {len(rules)}"
+    )
 
 
 if __name__ == "__main__":
