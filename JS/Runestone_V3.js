@@ -122,6 +122,25 @@ function main(config) {
     ]
   });
 
+  // ============================================================
+  // Emby
+  //
+  // 独立于 Disney+ 的服务策略组。
+  // 规则来源：
+  // MRS/Emby.mrs
+  // ============================================================
+
+  fixed["proxy-groups"].push({
+    "name": "Emby",
+    "type": "select",
+    "icon": "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Emby.png",
+    "proxies": [
+      "🖥️ All-Nodes",
+      "PROXY-Gate",
+      "DIRECT"
+    ]
+  });
+
   fixed["proxy-groups"].push({
     "name": "Spotify",
     "type": "select",
@@ -498,6 +517,7 @@ function main(config) {
     "YouTube",
     "Netflix",
     "Disney+",
+    "Emby",
     "Spotify",
     "TikTok",
     "Twitch",
@@ -606,6 +626,20 @@ function main(config) {
     "RULE-SET,ACL4SSR_BanAD,REJECT",
     "RULE-SET,ACL4SSR_BanProgramAD,REJECT",
 
+    // 加密货币App
+    "DOMAIN-SUFFIX,coinbase.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,binance.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,kraken.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,crypto.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,okx.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,bybit.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,bitget.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,gemini.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,metamask.io,PROXY-Gate",
+    "DOMAIN-SUFFIX,phantom.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,trustwallet.com,PROXY-Gate",
+    "DOMAIN-SUFFIX,ledger.com,PROXY-Gate",
+
     // YouTube
     "DOMAIN-SUFFIX,youtube.com,YouTube",
     "DOMAIN-SUFFIX,youtu.be,YouTube",
@@ -651,6 +685,9 @@ function main(config) {
     "DOMAIN-SUFFIX,disney.playback.edge.bamgrid.com,Disney+",
     "DOMAIN-SUFFIX,star.playback.edge.bamgrid.com,Disney+",
     "DOMAIN-SUFFIX,search-api-disney.bamgrid.com,Disney+",
+
+    // Emby
+    "RULE-SET,Emby,Emby",
 
     // Spotify
     "DOMAIN-SUFFIX,spotify.com,Spotify",
@@ -1016,6 +1053,14 @@ function main(config) {
       "format": "mrs",
       "interval": 86400,
       "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Copilot_IP.mrs"
+    },
+
+    "Emby": {
+      "type": "http",
+      "behavior": "domain",
+      "format": "mrs",
+      "interval": 86400,
+      "url": "https://raw.githubusercontent.com/kiki-rgb-00/kiki/refs/heads/main/MRS/Emby.mrs"
     }
   };
 
