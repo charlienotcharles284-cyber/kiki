@@ -25,6 +25,7 @@ jobs:
         run: |
           mkdir -p MRS
           mkdir -p Rules
+          mkdir -p .tmp/rules
 
       # =========================
       # Download Mihomo
@@ -53,6 +54,7 @@ jobs:
 
       # =========================
       # Original YAML Rules
+      # Keep as repository rule sources
       # =========================
 
       - name: Download Original YAML Rules
@@ -74,58 +76,61 @@ jobs:
 
       # =========================
       # Microsoft
+      # Temporary build files
       # =========================
 
       - name: Download Microsoft Rules
         run: |
-          wget -O Rules/Microsoft.yaml \
+          wget -O .tmp/rules/Microsoft.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml
 
       - name: Filter Microsoft Rules
         run: |
           python scripts/filter-microsoft.py \
-            Rules/Microsoft.yaml \
-            Rules/Microsoft_Filtered.yaml
+            .tmp/rules/Microsoft.yaml \
+            .tmp/rules/Microsoft_Filtered.yaml
 
       - name: Convert Microsoft Rules
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            Rules/Microsoft_Filtered.yaml \
+            .tmp/rules/Microsoft_Filtered.yaml \
             MRS/Microsoft.mrs
 
       # =========================
       # Copilot
+      # Temporary build files
       # =========================
 
       - name: Download Copilot Rules
         run: |
-          wget -O Rules/Copilot.yaml \
+          wget -O .tmp/rules/Copilot.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
 
       - name: Filter Copilot Rules
         run: |
           python scripts/filter-copilot.py \
-            Rules/Copilot.yaml \
-            Rules/Copilot_Domain.yaml \
-            Rules/Copilot_IP.yaml
+            .tmp/rules/Copilot.yaml \
+            .tmp/rules/Copilot_Domain.yaml \
+            .tmp/rules/Copilot_IP.yaml
 
       - name: Convert Copilot Domain Rules
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            Rules/Copilot_Domain.yaml \
+            .tmp/rules/Copilot_Domain.yaml \
             MRS/Copilot_Domain.mrs
 
       - name: Convert Copilot IP Rules
         run: |
           ./mihomo convert-ruleset \
             ipcidr yaml \
-            Rules/Copilot_IP.yaml \
+            .tmp/rules/Copilot_IP.yaml \
             MRS/Copilot_IP.mrs
 
       # =========================
       # Emby
+      # Keep as repository rule source
       # =========================
 
       - name: Download Emby Rules
@@ -147,86 +152,91 @@ jobs:
 
       # =========================
       # ChinaMax
+      # ChinaMax.yaml is kept as repository rule source
+      # Domain/IP files are temporary build files
       # =========================
 
       - name: Download ChinaMax Domain
         run: |
-          wget -O ChinaMax_Domain.yaml \
+          wget -O .tmp/rules/ChinaMax_Domain.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Domain.yaml
 
       - name: Download ChinaMax IP
         run: |
-          wget -O ChinaMax_IP.yaml \
+          wget -O .tmp/rules/ChinaMax_IP.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_IP.yaml
 
       - name: Remove ChinaMax IP ASN
         run: |
-          sed -i "/^[[:space:]]*-[[:space:]]*['\"]\?132203['\"]\?[[:space:]]*$/d" ChinaMax_IP.yaml
+          sed -i "/^[[:space:]]*-[[:space:]]*['\"]\?132203['\"]\?[[:space:]]*$/d" .tmp/rules/ChinaMax_IP.yaml
 
       - name: Convert ChinaMax Domain
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            ChinaMax_Domain.yaml \
+            .tmp/rules/ChinaMax_Domain.yaml \
             MRS/ChinaMax_Domain.mrs
 
       - name: Convert ChinaMax IP
         run: |
           ./mihomo convert-ruleset \
             ipcidr yaml \
-            ChinaMax_IP.yaml \
+            .tmp/rules/ChinaMax_IP.yaml \
             MRS/ChinaMax_IP.mrs
 
       # =========================
       # Privacy
+      # Privacy.yaml is kept as repository rule source
       # =========================
 
       - name: Download Privacy Domain
         run: |
-          wget -O Privacy_Domain.yaml \
+          wget -O .tmp/rules/Privacy_Domain.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Privacy/Privacy_Domain.yaml
 
       - name: Convert Privacy Domain
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            Privacy_Domain.yaml \
+            .tmp/rules/Privacy_Domain.yaml \
             MRS/Privacy_Domain.mrs
 
       # =========================
       # Advertising
+      # Advertising.yaml is kept as repository rule source
       # =========================
 
       - name: Download Advertising Domain
         run: |
-          wget -O Advertising_Domain.yaml \
+          wget -O .tmp/rules/Advertising_Domain.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising_Domain.yaml
 
       - name: Convert Advertising Domain
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            Advertising_Domain.yaml \
+            .tmp/rules/Advertising_Domain.yaml \
             MRS/Advertising_Domain.mrs
 
       # =========================
       # AdvertisingLite
+      # AdvertisingLite.yaml is kept as repository rule source
       # =========================
 
       - name: Download AdvertisingLite Domain
         run: |
-          wget -O AdvertisingLite_Domain.yaml \
+          wget -O .tmp/rules/AdvertisingLite_Domain.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Domain.yaml
 
       - name: Remove AdvertisingLite False Positives
         run: |
-          sed -i '/alicdn\.com/d' AdvertisingLite_Domain.yaml
+          sed -i '/alicdn\.com/d' .tmp/rules/AdvertisingLite_Domain.yaml
 
       - name: Convert AdvertisingLite Domain
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            AdvertisingLite_Domain.yaml \
+            .tmp/rules/AdvertisingLite_Domain.yaml \
             MRS/AdvertisingLite_Domain.mrs
 
       # =========================
@@ -235,11 +245,13 @@ jobs:
 
       - name: Download Apple Domain
         run: |
-          wget -O Apple_Domain.yaml \
+          wget -O .tmp/rules/Apple_Domain.yaml \
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Domain.yaml
 
       # =========================
       # iCloud
+      # Keep iCloud.yaml because it is part of
+      # the Apple/iCloud separation logic
       # =========================
 
       - name: Download iCloud Rules
@@ -249,6 +261,7 @@ jobs:
 
       # =========================
       # Filter iCloud from Apple Rules
+      # DO NOT CHANGE THIS LOGIC
       # =========================
 
       - name: Filter Apple iCloud Rules
@@ -257,8 +270,8 @@ jobs:
             Rules/iCloud.yaml \
             Rules/Apple.yaml \
             Rules/Apple.yaml \
-            Apple_Domain.yaml \
-            Apple_Domain_Filtered.yaml
+            .tmp/rules/Apple_Domain.yaml \
+            .tmp/rules/Apple_Domain_Filtered.yaml
 
       # =========================
       # Convert Apple Domain
@@ -268,7 +281,7 @@ jobs:
         run: |
           ./mihomo convert-ruleset \
             domain yaml \
-            Apple_Domain_Filtered.yaml \
+            .tmp/rules/Apple_Domain_Filtered.yaml \
             MRS/Apple_Domain.mrs
 
       # =========================
@@ -292,6 +305,26 @@ jobs:
           python scripts/sync-services.py --mihomo ./mihomo
 
       # =========================
+      # Remove obsolete generated YAML files
+      # =========================
+
+      - name: Remove obsolete generated YAML files
+        run: |
+          rm -f \
+            Rules/Microsoft.yaml \
+            Rules/Microsoft_Filtered.yaml \
+            Rules/Copilot.yaml \
+            Rules/Copilot_Domain.yaml \
+            Rules/Copilot_IP.yaml \
+            Rules/Apple_Domain.yaml \
+            Rules/Apple_Domain_Filtered.yaml \
+            Rules/ChinaMax_Domain.yaml \
+            Rules/ChinaMax_IP.yaml \
+            Rules/Privacy_Domain.yaml \
+            Rules/Advertising_Domain.yaml \
+            Rules/AdvertisingLite_Domain.yaml
+
+      # =========================
       # Commit
       # =========================
 
@@ -300,7 +333,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add MRS/*.mrs Rules/*.yaml
+          git add -A MRS Rules
 
           git diff --cached --quiet || git commit -m "Update rules MRS"
 
