@@ -1,165 +1,109 @@
 #!/usr/bin/env python3
 
-import sys
-import yaml
+import argparse
+import re
+from pathlib import Path
 
 
-# =========================
-# Configuration
-# =========================
-
-ONEDRIVE_SUFFIXES = {
-    "1drv.ms",
-    "1drv.com",
-    "livefilestore.com",
-    "microsoftpersonalcontent.com",
-    "onedrive.com",
-    "onedrive.co",
-    "onedrive.co.uk",
-    "onedrive.eu",
-    "onedrive.net",
-    "onedrive.org",
-}
-
-OUTLOOK_SUFFIXES = {
-    "acompli.com",
-    "acompli.net",
-    "hotmail",
-    "hotmail.co",
-    "hotmail.com",
-    "hotmail.eu",
-    "hotmail.net",
-    "hotmail.org",
-    "microsoftemail.com",
-    "outlook.cn",
-    "outlook.com",
-    "outlookgroups.ms",
-    "outlookmobile.com",
-}
-
-ONEDRIVE_KEYWORDS = {
-    "1drv",
-    "onedrive",
-    "skydrive",
+SUPPORTED_DOMAIN_TYPES = {
+    "DOMAIN",
+    "DOMAIN-SUFFIX",
 }
 
 
-# =========================
-# Helpers
-# =========================
+def normalize_domain(domain: str) -> str:
+    domain = domain.strip().strip("'\"").lower()
 
-def get_rule_type(rule):
-    if not isinstance(rule, str):
-        return None
+    if domain.startswith("+."):
+        domain = domain[2:]
+    elif domain.startswith("."):
+        domain = domain[1:]
 
-    parts = rule.split(",", 2)
-
-    if not parts:
-        return None
-
-    return parts[0].strip().upper()
+    return domain.rstrip(".")
 
 
-def get_rule_value(rule):
-    parts = rule.split(",", 2)
+def convert_domain_rules(input_path: Path, output_path: Path):
+    """
+    Convert Clash classical domain rules into Mihomo domain text.
 
-    if len(parts) < 2:
-        return ""
+    DOMAIN        -> example.com
+    DOMAIN-SUFFIX -> +.example.com
 
-    return parts[1].strip().lower()
+    DOMAIN-KEYWORD / PROCESS-NAME / IP rules are excluded.
+    """
 
+    output_rules = []
 
-def should_remove(rule):
-    rule_type = get_rule_type(rule)
-    value = get_rule_value(rule)
+    for raw_line in input_path.read_text(
+        encoding="utf-8"
+    ).splitlines():
 
-    # MRS domain 不支持 classical 中的进程规则
-    if rule_type == "PROCESS-NAME":
-        return True, "PROCESS-NAME"
+        line = raw_line.strip()
 
-    # MRS domain 不支持 DOMAIN-KEYWORD
-    if rule_type == "DOMAIN-KEYWORD":
-        return True, "DOMAIN-KEYWORD"
-
-    # 只处理真正的域名规则
-    if rule_type not in {"DOMAIN", "DOMAIN-SUFFIX"}:
-        return True, f"UNSUPPORTED:{rule_type}"
-
-    # OneDrive
-    if value in ONEDRIVE_SUFFIXES:
-        return True, "OneDrive"
-
-    if rule_type == "DOMAIN-KEYWORD" and value in ONEDRIVE_KEYWORDS:
-        return True, "OneDrive"
-
-    # Outlook / Hotmail / Microsoft Mail
-    if value in OUTLOOK_SUFFIXES:
-        return True, "Outlook"
-
-    return False, None
-
-
-# =========================
-# Main
-# =========================
-
-def main():
-    if len(sys.argv) != 3:
-        print(
-            "Usage: python filter-microsoft.py "
-            "<input.yaml> <output.yaml>"
+        match = re.match(
+            r"^-\s*([A-Z0-9-]+)\s*,\s*(.+?)\s*$",
+            line,
+            re.IGNORECASE,
         )
-        sys.exit(1)
 
-    input_file = sys.argv[1]
-    output_file = sys.argv[2]
-
-    with open(input_file, "r", encoding="utf-8") as f:
-        data = yaml.safe_load(f)
-
-    if not isinstance(data, dict):
-        raise ValueError("Input YAML is not a valid mapping.")
-
-    payload = data.get("payload", [])
-
-    if not isinstance(payload, list):
-        raise ValueError("Input YAML does not contain a valid payload list.")
-
-    filtered = []
-
-    removed_counts = {}
-
-    for rule in payload:
-        remove, reason = should_remove(rule)
-
-        if remove:
-            removed_counts[reason] = removed_counts.get(reason, 0) + 1
+        if not match:
             continue
 
-        filtered.append(rule)
+        rule_type = match.group(1).upper()
+        value = normalize_domain(match.group(2))
 
-    output = {
-        "payload": filtered
-    }
+        if rule_type not in SUPPORTED_DOMAIN_TYPES:
+            continue
 
-    with open(output_file, "w", encoding="utf-8") as f:
-        yaml.safe_dump(
-            output,
-            f,
-            allow_unicode=True,
-            sort_keys=False,
-            default_flow_style=False,
-        )
+        if not value:
+            continue
 
-    print(f"Input rules : {len(payload)}")
-    print(f"Output rules: {len(filtered)}")
-    print(f"Removed     : {len(payload) - len(filtered)}")
+        if rule_type == "DOMAIN":
+            output_rules.append(value)
 
-    if removed_counts:
-        print("\nRemoved by category:")
+        elif rule_type == "DOMAIN-SUFFIX":
+            output_rules.append(f"+.{value}")
 
-        for reason, count in sorted(removed_counts.items()):
-            print(f"  {reason}: {count}")
+    output_rules = sorted(set(output_rules))
+
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    output_path.write_text(
+        "\n".join(output_rules) + "\n",
+        encoding="utf-8",
+    )
+
+    return output_rules
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Prepare Microsoft domain rules for Mihomo MRS."
+    )
+
+    parser.add_argument(
+        "input",
+        type=Path,
+    )
+
+    parser.add_argument(
+        "output",
+        type=Path,
+    )
+
+    args = parser.parse_args()
+
+    rules = convert_domain_rules(
+        args.input,
+        args.output,
+    )
+
+    print(
+        f"Microsoft MRS domain rules: {len(rules)}"
+    )
 
 
 if __name__ == "__main__":
