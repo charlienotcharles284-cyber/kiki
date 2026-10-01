@@ -1,8 +1,6 @@
 /*
  * 服务分类配置｜Android FlClash版
  *
- * FlClash 会将当前选中的多个节点来源合并到 config.proxies。
- * 本脚本不依赖任何 proxy-providers 名称。
  *
  * 结构：
  * 1. 主策略组
