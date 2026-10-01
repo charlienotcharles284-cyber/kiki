@@ -352,13 +352,13 @@ jobs:
             Rules/Copilot.yaml \
             Rules/Copilot_Domain.yaml \
             Rules/Copilot_IP.yaml \
-            Rules/Apple_Domain.yaml \
-            Rules/Apple_Domain_Filtered.yaml \
             Rules/ChinaMax_Domain.yaml \
             Rules/ChinaMax_IP.yaml \
             Rules/Privacy_Domain.yaml \
             Rules/Advertising_Domain.yaml \
-            Rules/AdvertisingLite_Domain.yaml
+            Rules/AdvertisingLite_Domain.yaml \
+            .tmp/rules/Apple_Domain.yaml \
+            .tmp/rules/Apple_Domain_Filtered.yaml
 
       # =========================
       # Commit
