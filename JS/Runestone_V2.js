@@ -47,6 +47,7 @@ function main(config) {
       "strict-route": true,
       "dns-hijack": [
         "any:53"
+        "tcp://any:53"
       ]
     },
 
