@@ -1,26 +1,17 @@
 /*
- * 服务分类配置｜FlClash Android 版
+ * 服务分类配置｜Android FlClash版
  *
- *
- * 适用：
- * Android / FlClash / Mihomo
- *
+ * FlClash 会将当前选中的多个节点来源合并到 config.proxies。
+ * 本脚本不依赖任何 proxy-providers 名称。
  *
  * 结构：
- * 1. Android / Mihomo 网络配置
- * 2. 节点池
- * 3. 主策略组
- * 4. 普通服务策略组
- * 5. 根据实际节点动态生成地区 Auto
- * 6. 将实际存在的 Auto 组加入服务策略组
- * 7. PROXY-Gate
- * 8. Global-Fallback
- * 9. Android App / Process Rules
- * 10. Rules
- * 11. Rule Providers
- * - TUN 改为 mixed
- * - 增加 find-process-mode: strict
- * - 增加 Android PROCESS-NAME 应用规则
+ * 1. 主策略组
+ * 2. 普通服务策略组
+ * 3. 根据实际节点动态生成地区 Auto
+ * 4. Global-Fallback
+ * 5. Rules
+ * 6. Android PROCESS-NAME App 分流
+ * 7. Rule Providers
  */
 
 function main(config) {
@@ -47,33 +38,33 @@ function main(config) {
     "tcp-concurrent": true,
     "ipv6": true,
 
-    // ============================================================
-    // Android 进程匹配
-    //
-    // strict 是 Mihomo 推荐的进程匹配模式。
-    // Android 下 PROCESS-NAME 可以匹配应用包名。
-    // ============================================================
-
-    "find-process-mode": "strict",
-
+    /*
+     * Android / FlClash TUN
+     *
+     * mixed：Android 环境下兼顾性能与兼容性
+     * auto-route：接管系统流量
+     * auto-detect-interface：自动选择出口网卡
+     * strict-route：减少绕过 TUN 的可能
+     */
     "tun": {
       "enable": true,
-
-      // Android 推荐 mixed：
-      // TCP 使用 system stack
-      // UDP 使用 gvisor stack
       "stack": "mixed",
-
       "auto-route": true,
       "auto-detect-interface": true,
       "strict-route": true,
-
-      // UDP 53 + TCP 53
       "dns-hijack": [
         "any:53",
         "tcp://any:53"
       ]
     },
+
+    /*
+     * 启用进程识别。
+     *
+     * Android 下 PROCESS-NAME 可用于按照 App
+     * 的 package name 对流量进行分流。
+     */
+    "find-process-mode": "strict",
 
     "dns": {
       "enable": true,
@@ -152,7 +143,6 @@ function main(config) {
         ]
       },
 
-      // Android 版本删除 Apple 专用 fake-ip 例外。
       "fake-ip-filter": [
         "*.lan",
         "*.local",
@@ -179,19 +169,14 @@ function main(config) {
     }
   };
 
-  // ============================================================
-  // 节点池
-  // ============================================================
-
   fixed.proxies = currentProxies;
   fixed["proxy-groups"] = [];
 
-  // ============================================================
-  // 1. 主策略组
-  //
-  // Auto 组故意不在这里生成。
-  // Auto 会在所有普通服务策略组之后生成。
-  // ============================================================
+  /*
+   * =========================
+   * 主策略组
+   * =========================
+   */
 
   fixed["proxy-groups"].push(
     {
@@ -212,17 +197,11 @@ function main(config) {
     }
   );
 
-  // ============================================================
-  // 2. 普通服务策略组
-  //
-  // 这里暂时只放 All-Nodes / PROXY-Gate / DIRECT。
-  // 后面检测完节点地区后，再把实际存在的 Auto 组插入。
-  //
-  // 因此：
-  // 没有法国节点 → 不会出现 FR-Auto
-  // 只有 1 个法国节点 → 不会出现 FR-Auto
-  // 有 2 个法国节点 → 生成 FR-Auto
-  // ============================================================
+  /*
+   * =========================
+   * 普通服务策略组
+   * =========================
+   */
 
   fixed["proxy-groups"].push({
     "name": "YouTube",
@@ -256,10 +235,6 @@ function main(config) {
       "DIRECT"
     ]
   });
-
-  // ============================================================
-  // Emby
-  // ============================================================
 
   fixed["proxy-groups"].push({
     "name": "Emby",
@@ -349,10 +324,6 @@ function main(config) {
     ]
   });
 
-  // ============================================================
-  // Microsoft
-  // ============================================================
-
   fixed["proxy-groups"].push({
     "name": "Microsoft",
     "type": "select",
@@ -397,10 +368,6 @@ function main(config) {
     ]
   });
 
-  // ============================================================
-  // Amazon
-  // ============================================================
-
   fixed["proxy-groups"].push({
     "name": "Amazon",
     "type": "select",
@@ -411,15 +378,6 @@ function main(config) {
       "DIRECT"
     ]
   });
-
-  // ============================================================
-  // Meta
-  //
-  // Facebook / Instagram / Threads / Meta AI / Muse
-  // 统一使用 Meta 策略组。
-  //
-  // WhatsApp 保持独立策略组。
-  // ============================================================
 
   fixed["proxy-groups"].push({
     "name": "Meta",
@@ -487,9 +445,11 @@ function main(config) {
     ]
   });
 
-  // ============================================================
-  // 3. 地区 Auto
-  // ============================================================
+  /*
+   * =========================
+   * 地区 Auto
+   * =========================
+   */
 
   const regionGroups = [
     {
@@ -498,140 +458,120 @@ function main(config) {
       filter: /([\[]US[\]]|^US$|USA|United[ _-]?States|\bUS\b|美国|美國|🇺🇸)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "SG",
       name: "🇸🇬 SG",
       filter: /([\[]SG[\]]|^SG$|Singapore|\bSG\b|新加坡|狮城|🇸🇬)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "HK",
       name: "🇭🇰 HK",
       filter: /([\[]HK[\]]|^HK$|Hong[ _-]?Kong|\bHK\b|香港|🇭🇰)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "JP",
       name: "🇯🇵 JP",
       filter: /([\[]JP[\]]|^JP$|Japan|\bJP\b|日本|东京|大阪|🇯🇵)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "TW",
       name: "🇹🇼 TW",
       filter: /([\[]TW[\]]|^TW$|Taiwan|Taibei|Taipei|\bTW\b|台湾|臺灣|台北|高雄|🇹🇼)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "UK",
       name: "🇬🇧 UK",
       filter: /([\[]UK[\]]|^UK$|United[ _-]?Kingdom|Britain|England|\bUK\b|英国|英國|伦敦|🇬🇧)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "DE",
       name: "🇩🇪 DE",
       filter: /([\[]DE[\]]|^DE$|Germany|Deutschland|\bDE\b|德国|德國|法兰克福|🇩🇪)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "FR",
       name: "🇫🇷 FR",
       filter: /([\[]FR[\]]|^FR$|France|\bFR\b|法国|法國|巴黎|🇫🇷)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "RU",
       name: "🇷🇺 RU",
       filter: /([\[]RU[\]]|^RU$|Russia|Russian[ _-]?Federation|\bRU\b|俄罗斯|俄羅斯|莫斯科|伯力|🇷🇺)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "CA",
       name: "🇨🇦 CA",
       filter: /([\[]CA[\]]|^CA$|Canada|\bCA\b|加拿大|🇨🇦)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "AU",
       name: "🇦🇺 AU",
       filter: /([\[]AU[\]]|^AU$|Australia|\bAU\b|澳大利亚|澳洲|澳大利亞|🇦🇺)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "KR",
       name: "🇰🇷 KR",
       filter: /([\[]KR[\]]|^KR$|Korea|South[ _-]?Korea|\bKR\b|韩国|韓國|首尔|首爾|🇰🇷)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "IT",
       name: "🇮🇹 IT",
       filter: /([\[]IT[\]]|^IT$|Italy|Italian|\bIT\b|意大利|義大利|米兰|米蘭|罗马|羅馬|🇮🇹)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "ES",
       name: "🇪🇸 ES",
       filter: /([\[]ES[\]]|^ES$|Spain|Spanish|\bES\b|西班牙|马德里|馬德里|🇪🇸)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "NL",
       name: "🇳🇱 NL",
       filter: /([\[]NL[\]]|^NL$|Netherlands|Dutch|\bNL\b|荷兰|荷蘭|阿姆斯特丹|🇳🇱)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "FI",
       name: "🇫🇮 FI",
       filter: /([\[]FI[\]]|^FI$|Finland|Finnish|\bFI\b|芬兰|芬蘭|赫尔辛基|赫爾辛基|🇫🇮)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "NO",
       name: "🇳🇴 NO",
       filter: /([\[]NO[\]]|^NO$|Norway|Norwegian|\bNO\b|挪威|奥斯陆|奧斯陸|🇳🇴)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "SE",
       name: "🇸🇪 SE",
       filter: /([\[]SE[\]]|^SE$|Sweden|Swedish|\bSE\b|瑞典|斯德哥尔摩|斯德哥爾摩|🇸🇪)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "CH",
       name: "🇨🇭 CH",
       filter: /([\[]CH[\]]|^CH$|Switzerland|Swiss|\bCH\b|瑞士|苏黎世|蘇黎世|日内瓦|日內瓦|🇨🇭)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "PL",
       name: "🇵🇱 PL",
       filter: /([\[]PL[\]]|^PL$|Poland|Polish|\bPL\b|波兰|波蘭|华沙|華沙|🇵🇱)/i,
       icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
     },
-
     {
       key: "MY",
       name: "🇲🇾 MY",
@@ -649,7 +589,6 @@ function main(config) {
 
     const autoName = region.name + "-Auto";
 
-    // 2 个及以上节点才生成地区 Auto。
     if (matched.length < 2) {
       return;
     }
@@ -666,20 +605,6 @@ function main(config) {
 
     existingRegionalAutos.push(autoName);
   });
-
-  // ============================================================
-  // 4. 将实际存在的 Auto 组加入服务策略组
-  //
-  // 顺序：
-  //
-  // 🖥️ All-Nodes
-  // 🌍 Global-Fallback
-  // 🇺🇸 US-Auto
-  // 🇸🇬 SG-Auto
-  // ...
-  // PROXY-Gate
-  // DIRECT
-  // ============================================================
 
   const serviceProxyChoices = [
     "🖥️ All-Nodes",
@@ -722,10 +647,6 @@ function main(config) {
     }
   });
 
-  // ============================================================
-  // 5. PROXY-Gate
-  // ============================================================
-
   const proxyGate = fixed["proxy-groups"].find(
     group => group.name === "PROXY-Gate"
   );
@@ -741,11 +662,11 @@ function main(config) {
     ];
   }
 
-  // ============================================================
-  // 6. Global-Fallback
-  //
-  // 放在整个策略组列表最后。
-  // ============================================================
+  /*
+   * =========================
+   * Global Fallback
+   * =========================
+   */
 
   if (existingRegionalAutos.length) {
     fixed["proxy-groups"].push({
@@ -758,110 +679,24 @@ function main(config) {
     });
   }
 
-  // ============================================================
-  // 7. Android App / Process Rules
-  //
-  // Android 下 PROCESS-NAME 可以匹配应用包名。
-  //
-  // 这些规则放在普通 DOMAIN / RULE-SET 规则之前。
-  //
-  // 这样：
-  //
-  // ChatGPT App → GPT
-  // Telegram App → Telegram
-  // WhatsApp App → WhatsApp
-  //
-  // 等。
-  //
-  // 即使 App 内部使用的域名发生变化，
-  // 包名规则仍然可以直接将流量交给对应策略组。
-  //
-  // 如果某个 App 的包名以后发生变化，
-  // 只需要修改这里，不影响下面的域名规则。
-  // ============================================================
-
-  const androidProcessRules = [
-    // YouTube
-    "PROCESS-NAME,com.google.android.youtube,YouTube",
-
-    // Netflix
-    "PROCESS-NAME,com.netflix.mediaclient,Netflix",
-
-    // Disney+
-    "PROCESS-NAME,com.disney.disneyplus,Disney+",
-
-    // Spotify
-    "PROCESS-NAME,com.spotify.music,Spotify",
-
-    // TikTok
-    "PROCESS-NAME,com.zhiliaoapp.musically,TikTok",
-
-    // Twitch
-    "PROCESS-NAME,tv.twitch.android.app,Twitch",
-
-    // ChatGPT
-    "PROCESS-NAME,com.openai.chatgpt,GPT",
-
-    // Gemini
-    "PROCESS-NAME,com.google.android.apps.bard,Gemini",
-
-    // Claude
-    "PROCESS-NAME,com.anthropic.claude,Claude",
-
-    // OneDrive
-    "PROCESS-NAME,com.microsoft.skydrive,OneDrive",
-
-    // Outlook
-    "PROCESS-NAME,com.microsoft.office.outlook,Outlook",
-
-    // Google
-    "PROCESS-NAME,com.google.android.googlequicksearchbox,Google",
-
-    // Amazon
-    "PROCESS-NAME,com.amazon.mShop.android.shopping,Amazon",
-
-    // Facebook
-    "PROCESS-NAME,com.facebook.katana,Meta",
-
-    // Messenger
-    "PROCESS-NAME,com.facebook.orca,Meta",
-
-    // Instagram
-    "PROCESS-NAME,com.instagram.android,Meta",
-
-    // Threads
-    "PROCESS-NAME,com.instagram.barcelona,Meta",
-
-    // X
-    "PROCESS-NAME,com.twitter.android,X",
-
-    // WhatsApp
-    "PROCESS-NAME,com.whatsapp,WhatsApp",
-
-    // Telegram
-    "PROCESS-NAME,org.telegram.messenger,Telegram",
-
-    // GitHub
-    "PROCESS-NAME,com.github.android,Github",
-
-    // Speedtest
-    "PROCESS-NAME,org.zwanoo.android.speedtest,Speedtest"
-  ];
-
-  // ============================================================
-  // Rules
-  // ============================================================
+  /*
+   * =========================
+   * Rules
+   *
+   * 顺序：
+   * 1. LAN
+   * 2. 广告 / 隐私 REJECT
+   * 3. Android PROCESS-NAME
+   * 4. 服务 DOMAIN / RULE-SET
+   * 5. China
+   * 6. MATCH
+   * =========================
+   */
 
   fixed.rules = [
-    // ==========================================================
-    // Android App / Process
-    // ==========================================================
-
-    ...androidProcessRules,
-
-    // ==========================================================
-    // LAN
-    // ==========================================================
+    /*
+     * LAN / 本地网络
+     */
 
     "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
     "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
@@ -869,9 +704,14 @@ function main(config) {
     "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
     "GEOIP,LAN,DIRECT,no-resolve",
 
-    // ==========================================================
-    // 广告 / 隐私
-    // ==========================================================
+    /*
+     * =========================
+     * 广告 / 隐私
+     *
+     * 必须位于 PROCESS-NAME 前面。
+     * 防止 App 级规则抢先命中广告请求。
+     * =========================
+     */
 
     "RULE-SET,AdvertisingLite,REJECT",
     "RULE-SET,AdvertisingLite_Domain,REJECT",
@@ -880,9 +720,122 @@ function main(config) {
     "RULE-SET,ACL4SSR_BanAD,REJECT",
     "RULE-SET,ACL4SSR_BanProgramAD,REJECT",
 
-    // ==========================================================
-    // 加密货币 App
-    // ==========================================================
+    /*
+     * =========================
+     * Android App 级分流
+     *
+     * 广告 / 隐私规则之后，
+     * 各服务 DOMAIN / RULE-SET 之前。
+     *
+     * 这样可以实现：
+     *
+     * 广告请求
+     *   → REJECT
+     *
+     * 普通 App 流量
+     *   → PROCESS-NAME
+     *   → 对应服务策略组
+     *
+     * PROCESS-NAME 仅作为 Android App
+     * 级分流使用。
+     * =========================
+     */
+
+    /*
+     * YouTube
+     */
+    "PROCESS-NAME,com.google.android.youtube,YouTube",
+
+    /*
+     * Netflix
+     */
+    "PROCESS-NAME,com.netflix.mediaclient,Netflix",
+
+    /*
+     * Spotify
+     */
+    "PROCESS-NAME,com.spotify.music,Spotify",
+
+    /*
+     * TikTok
+     */
+    "PROCESS-NAME,com.zhiliaoapp.musically,TikTok",
+
+    /*
+     * Twitch
+     */
+    "PROCESS-NAME,com.twitch.android.app,Twitch",
+
+    /*
+     * ChatGPT
+     */
+    "PROCESS-NAME,com.openai.chatgpt,GPT",
+
+    /*
+     * Claude
+     */
+    "PROCESS-NAME,com.anthropic.claude,Claude",
+
+    /*
+     * Gemini
+     */
+    "PROCESS-NAME,com.google.android.apps.bard,Gemini",
+
+    /*
+     * Microsoft Outlook
+     */
+    "PROCESS-NAME,com.microsoft.office.outlook,Outlook",
+
+    /*
+     * OneDrive
+     */
+    "PROCESS-NAME,com.microsoft.skydrive,OneDrive",
+
+    /*
+     * Google
+     */
+    "PROCESS-NAME,com.google.android.googlequicksearchbox,Google",
+
+    /*
+     * Amazon
+     */
+    "PROCESS-NAME,com.amazon.mShop.android.shopping,Amazon",
+
+    /*
+     * Facebook
+     */
+    "PROCESS-NAME,com.facebook.katana,Meta",
+
+    /*
+     * Instagram
+     */
+    "PROCESS-NAME,com.instagram.android,Meta",
+
+    /*
+     * X
+     */
+    "PROCESS-NAME,com.twitter.android,X",
+
+    /*
+     * WhatsApp
+     */
+    "PROCESS-NAME,com.whatsapp,WhatsApp",
+
+    /*
+     * Telegram
+     */
+    "PROCESS-NAME,org.telegram.messenger,Telegram",
+
+    /*
+     * GitHub
+     */
+    "PROCESS-NAME,com.github.android,Github",
+
+    /*
+     * =========================
+     * Crypto
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,aicoin.com,PROXY-Gate",
     "DOMAIN-SUFFIX,coinbase.com,PROXY-Gate",
@@ -898,9 +851,11 @@ function main(config) {
     "DOMAIN-SUFFIX,trustwallet.com,PROXY-Gate",
     "DOMAIN-SUFFIX,ledger.com,PROXY-Gate",
 
-    // ==========================================================
-    // YouTube
-    // ==========================================================
+    /*
+     * =========================
+     * YouTube
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,youtube.com,YouTube",
     "DOMAIN-SUFFIX,youtu.be,YouTube",
@@ -911,9 +866,11 @@ function main(config) {
     "DOMAIN-SUFFIX,googlevideo.com,YouTube",
     "DOMAIN-SUFFIX,ggpht.com,YouTube",
 
-    // ==========================================================
-    // Netflix
-    // ==========================================================
+    /*
+     * =========================
+     * Netflix
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,netflix.com,Netflix",
     "DOMAIN-SUFFIX,netflix.net,Netflix",
@@ -939,9 +896,11 @@ function main(config) {
     "DOMAIN-SUFFIX,netflixtechblog.com,Netflix",
     "DOMAIN,netflix.com.edgesuite.net,Netflix",
 
-    // ==========================================================
-    // Disney+
-    // ==========================================================
+    /*
+     * =========================
+     * Disney+
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,disneyplus.com,Disney+",
     "DOMAIN-SUFFIX,disney-plus.net,Disney+",
@@ -953,15 +912,19 @@ function main(config) {
     "DOMAIN-SUFFIX,star.playback.edge.bamgrid.com,Disney+",
     "DOMAIN-SUFFIX,search-api-disney.bamgrid.com,Disney+",
 
-    // ==========================================================
-    // Emby
-    // ==========================================================
+    /*
+     * =========================
+     * Emby
+     * =========================
+     */
 
     "RULE-SET,Emby,Emby",
 
-    // ==========================================================
-    // Spotify
-    // ==========================================================
+    /*
+     * =========================
+     * Spotify
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,spotify.com,Spotify",
     "DOMAIN-SUFFIX,spotifycdn.com,Spotify",
@@ -970,9 +933,11 @@ function main(config) {
     "DOMAIN-SUFFIX,api-partner.spotify.com,Spotify",
     "DOMAIN-SUFFIX,heads4-ak-spotify-com.akamaized.net,Spotify",
 
-    // ==========================================================
-    // TikTok
-    // ==========================================================
+    /*
+     * =========================
+     * TikTok
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,tiktok.com,TikTok",
     "DOMAIN-SUFFIX,tiktokcdn.com,TikTok",
@@ -985,9 +950,11 @@ function main(config) {
     "DOMAIN-SUFFIX,muscdn.com,TikTok",
     "DOMAIN-SUFFIX,musical.ly,TikTok",
 
-    // ==========================================================
-    // Twitch
-    // ==========================================================
+    /*
+     * =========================
+     * Twitch
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,twitch.tv,Twitch",
     "DOMAIN-SUFFIX,twitchcdn.net,Twitch",
@@ -995,9 +962,11 @@ function main(config) {
     "DOMAIN-SUFFIX,ttvnw.net,Twitch",
     "DOMAIN-SUFFIX,twitchsvc.net,Twitch",
 
-    // ==========================================================
-    // GPT
-    // ==========================================================
+    /*
+     * =========================
+     * GPT / OpenAI
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,chatgpt.com,GPT",
     "DOMAIN-SUFFIX,openai.com,GPT",
@@ -1028,11 +997,12 @@ function main(config) {
     "DOMAIN,o33249.ingest.sentry.io,GPT",
     "DOMAIN,rum.browser-intake-datadoghq.com,GPT",
     "DOMAIN,challenges.cloudflare.com,GPT",
-    "DOMAIN,humb.apple.com,GPT",
 
-    // ==========================================================
-    // Gemini
-    // ==========================================================
+    /*
+     * =========================
+     * Gemini
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,gemini.google.com,Gemini",
     "DOMAIN-SUFFIX,aistudio.google.com,Gemini",
@@ -1041,26 +1011,32 @@ function main(config) {
     "DOMAIN-SUFFIX,gemini.googleusercontent.com,Gemini",
     "DOMAIN-SUFFIX,makersuite.google.com,Gemini",
 
-    // ==========================================================
-    // Claude
-    // ==========================================================
+    /*
+     * =========================
+     * Claude
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,claude.ai,Claude",
     "DOMAIN-SUFFIX,anthropic.com,Claude",
     "DOMAIN-SUFFIX,claudeusercontent.com,Claude",
     "DOMAIN-SUFFIX,claudeusercontent.com.cdn.cloudflare.net,Claude",
 
-    // ==========================================================
-    // Microsoft / Copilot
-    // ==========================================================
+    /*
+     * =========================
+     * Microsoft / Copilot
+     * =========================
+     */
 
     "RULE-SET,Copilot_Domain,Microsoft",
     "RULE-SET,Copilot_IP,Microsoft",
     "RULE-SET,Microsoft,Microsoft",
 
-    // ==========================================================
-    // OneDrive
-    // ==========================================================
+    /*
+     * =========================
+     * OneDrive
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,1drv.com,OneDrive",
     "DOMAIN-SUFFIX,1drv.ms,OneDrive",
@@ -1079,9 +1055,11 @@ function main(config) {
     "DOMAIN-SUFFIX,storage.live.com,OneDrive",
     "DOMAIN-SUFFIX,storage.msn.com,OneDrive",
 
-    // ==========================================================
-    // Outlook
-    // ==========================================================
+    /*
+     * =========================
+     * Outlook
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,acompli.com,Outlook",
     "DOMAIN-SUFFIX,acompli.net,Outlook",
@@ -1096,17 +1074,21 @@ function main(config) {
     "DOMAIN-SUFFIX,outlookmobile.com,Outlook",
     "DOMAIN-SUFFIX,microsoftemail.com,Outlook",
 
-    // ==========================================================
-    // Grok
-    // ==========================================================
+    /*
+     * =========================
+     * Grok
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,grok.com,Grok",
     "DOMAIN-SUFFIX,x.ai,Grok",
     "DOMAIN-KEYWORD,grok,Grok",
 
-    // ==========================================================
-    // Amazon
-    // ==========================================================
+    /*
+     * =========================
+     * Amazon
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,amazon.com,Amazon",
     "DOMAIN-SUFFIX,amazon.co.uk,Amazon",
@@ -1129,19 +1111,19 @@ function main(config) {
     "DOMAIN-SUFFIX,amazon.com.tr,Amazon",
     "DOMAIN-SUFFIX,amazon.eg,Amazon",
     "DOMAIN-SUFFIX,amazon.co.za,Amazon",
-
     "DOMAIN-SUFFIX,images-amazon.com,Amazon",
     "DOMAIN-SUFFIX,ssl-images-amazon.com,Amazon",
     "DOMAIN-SUFFIX,media-amazon.com,Amazon",
     "DOMAIN-SUFFIX,amazon-adsystem.com,Amazon",
-
     "DOMAIN-SUFFIX,amazonpay.com,Amazon",
     "DOMAIN-SUFFIX,amazonpay.in,Amazon",
     "DOMAIN-SUFFIX,amazonpay.com.br,Amazon",
 
-    // ==========================================================
-    // Google
-    // ==========================================================
+    /*
+     * =========================
+     * Google
+     * =========================
+     */
 
     "DOMAIN-KEYWORD,google,Google",
     "DOMAIN-SUFFIX,gmail.com,Google",
@@ -1149,50 +1131,54 @@ function main(config) {
     "DOMAIN-SUFFIX,gstatic.com,Google",
     "DOMAIN-SUFFIX,googleapis.com,Google",
 
-    // ==========================================================
-    // Meta
-    // ==========================================================
+    /*
+     * =========================
+     * Meta
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,facebook.com,Meta",
     "DOMAIN-SUFFIX,facebook.net,Meta",
     "DOMAIN-SUFFIX,fbcdn.net,Meta",
     "DOMAIN-SUFFIX,fbsbx.com,Meta",
     "DOMAIN-SUFFIX,fb.com,Meta",
-
     "DOMAIN-SUFFIX,instagram.com,Meta",
     "DOMAIN-SUFFIX,cdninstagram.com,Meta",
     "DOMAIN-SUFFIX,instagram.net,Meta",
-
     "DOMAIN-SUFFIX,threads.com,Meta",
     "DOMAIN-SUFFIX,threads.net,Meta",
-
     "DOMAIN-SUFFIX,messenger.com,Meta",
-
     "DOMAIN-SUFFIX,meta.ai,Meta",
     "DOMAIN-SUFFIX,ai.meta.com,Meta",
     "DOMAIN-SUFFIX,muse.ai,Meta",
 
-    // ==========================================================
-    // X
-    // ==========================================================
+    /*
+     * =========================
+     * X
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,x.com,X",
     "DOMAIN-SUFFIX,twitter.com,X",
     "DOMAIN-SUFFIX,t.co,X",
     "DOMAIN-SUFFIX,twimg.com,X",
 
-    // ==========================================================
-    // WhatsApp
-    // ==========================================================
+    /*
+     * =========================
+     * WhatsApp
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,whatsapp.com,WhatsApp",
     "DOMAIN-SUFFIX,whatsapp.net,WhatsApp",
     "DOMAIN-SUFFIX,wa.me,WhatsApp",
     "DOMAIN-SUFFIX,whatsapp.org,WhatsApp",
 
-    // ==========================================================
-    // Telegram
-    // ==========================================================
+    /*
+     * =========================
+     * Telegram
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,telegram.org,Telegram",
     "DOMAIN-SUFFIX,telegram.me,Telegram",
@@ -1208,14 +1194,15 @@ function main(config) {
     "IP-CIDR,91.108.20.0/22,Telegram,no-resolve",
     "IP-CIDR,91.108.56.0/22,Telegram,no-resolve",
     "IP-CIDR,149.154.160.0/20,Telegram,no-resolve",
-
     "IP-CIDR6,2001:b28:f23d::/48,Telegram,no-resolve",
     "IP-CIDR6,2001:b28:f23f::/48,Telegram,no-resolve",
     "IP-CIDR6,2001:67c:4e8::/48,Telegram,no-resolve",
 
-    // ==========================================================
-    // Github
-    // ==========================================================
+    /*
+     * =========================
+     * GitHub
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,github.com,Github",
     "DOMAIN-SUFFIX,githubusercontent.com,Github",
@@ -1225,9 +1212,11 @@ function main(config) {
     "DOMAIN-SUFFIX,github.dev,Github",
     "DOMAIN-SUFFIX,githubstatus.com,Github",
 
-    // ==========================================================
-    // Speedtest
-    // ==========================================================
+    /*
+     * =========================
+     * Speedtest
+     * =========================
+     */
 
     "DOMAIN-SUFFIX,speedtest.net,Speedtest",
     "DOMAIN-SUFFIX,speedtest.com,Speedtest",
@@ -1236,9 +1225,11 @@ function main(config) {
     "DOMAIN-SUFFIX,ookla.net,Speedtest",
     "DOMAIN-SUFFIX,speedtestcustom.com,Speedtest",
 
-    // ==========================================================
-    // 中国大陆
-    // ==========================================================
+    /*
+     * =========================
+     * 中国大陆
+     * =========================
+     */
 
     "RULE-SET,ChinaMax,DIRECT",
     "RULE-SET,ChinaMax_Domain,DIRECT",
@@ -1246,20 +1237,32 @@ function main(config) {
     "GEOSITE,CN,DIRECT",
     "GEOIP,CN,DIRECT,no-resolve",
 
-    // ==========================================================
-    // 最终兜底
-    // ==========================================================
+    /*
+     * =========================
+     * 最终兜底
+     * =========================
+     */
 
     "MATCH,PROXY-Gate"
   ];
 
-  // ============================================================
-  // Rule Providers
-  //
-  // Apple / Apple_Domain / iCloud 已从 Android 版本删除。
-  //
-  // 其余远程规则集保持原 V2。
-  // ============================================================
+  /*
+   * =========================
+   * Rule Providers
+   * =========================
+   *
+   * Android 版移除：
+   * - Apple
+   * - Apple_Domain
+   * - iCloud
+   *
+   * 保留：
+   * - 广告
+   * - 隐私
+   * - ChinaMax
+   * - Microsoft / Copilot
+   * - Emby
+   */
 
   fixed["rule-providers"] = {
     "AdvertisingLite": {
