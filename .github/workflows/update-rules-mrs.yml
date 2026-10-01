@@ -340,25 +340,17 @@ jobs:
           python scripts/sync-services.py --mihomo ./mihomo
 
       # =========================
-      # Remove obsolete generated
-      # YAML files
+      # Remove temporary build files
+      #
+      # Everything under .tmp/rules/
+      # is generated only for this build.
+      # Final MRS files have already been
+      # generated before this step.
       # =========================
 
-      - name: Remove obsolete generated YAML files
+      - name: Remove temporary build files
         run: |
-          rm -f \
-            Rules/Microsoft.yaml \
-            Rules/Microsoft_Filtered.yaml \
-            Rules/Copilot.yaml \
-            Rules/Copilot_Domain.yaml \
-            Rules/Copilot_IP.yaml \
-            Rules/ChinaMax_Domain.yaml \
-            Rules/ChinaMax_IP.yaml \
-            Rules/Privacy_Domain.yaml \
-            Rules/Advertising_Domain.yaml \
-            Rules/AdvertisingLite_Domain.yaml \
-            .tmp/rules/Apple_Domain.yaml \
-            .tmp/rules/Apple_Domain_Filtered.yaml
+          rm -rf .tmp/rules/*
 
       # =========================
       # Commit
