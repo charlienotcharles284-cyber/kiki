@@ -129,6 +129,7 @@ function main(config) {
       },
 
       "fake-ip-filter": [
+        "geosite:cn",
         "*.lan",
         "*.local",
         "localhost",
@@ -142,10 +143,7 @@ function main(config) {
         "+.stun.*.*.*",
         "+.stun.*.*.*.*",
         "+.stun.*.*.*.*.*",
-        "+.weixin.com",
         "+.wechat.com",
-        "+.qq.com",
-        "+.tencent.com",
         "speedtest.net"
       ]
     },
