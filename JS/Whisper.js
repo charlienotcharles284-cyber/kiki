@@ -1245,7 +1245,7 @@ function main(config) {
 
     "ACL4SSR_BanProgramAD_iP": {
       "type": "http",
-      "behavior": "domain",
+      "behavior": "ipcidr",
       "format": "mrs",
       "interval": 86400,
       "url": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/mrs/BanProgramAD_ip.mrs"
