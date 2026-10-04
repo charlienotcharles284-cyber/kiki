@@ -65,8 +65,8 @@ function main(config) {
       ],
 
       "nameserver": [
-        "https://dns.alidns.com/dns-query",
-        "https://doh.pub/dns-query"
+        "https://dns.cloudflare.com/dns-query",
+        "https://dns.google/dns-query"
       ],
 
       "proxy-server-nameserver-policy": null,
@@ -109,8 +109,7 @@ function main(config) {
       },
 
       "fallback": [
-        "https://dns.cloudflare.com/dns-query",
-        "https://dns.google/dns-query"
+        "https://anycast.uncensoreddns.org/dns-query"
       ],
 
       "fallback-filter": {
