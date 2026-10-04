@@ -1087,37 +1087,57 @@ function main(config) {
     "DOMAIN-SUFFIX,gstatic.com,Google",
     "DOMAIN-SUFFIX,googleapis.com,Google",
 
+    // WhatsApp
+    "DOMAIN-SUFFIX,whatsapp.com,WhatsApp",
+    "DOMAIN-SUFFIX,whatsapp.net,WhatsApp",
+    "DOMAIN-SUFFIX,wa.me,WhatsApp",
+    "DOMAIN-SUFFIX,whatsapp.org,WhatsApp",
+    "DOMAIN-SUFFIX,whatsapp.biz,WhatsApp",
+    "DOMAIN-SUFFIX,whatsapp.info,WhatsApp",
+    "DOMAIN,graph.facebook.com,WhatsApp",
+
     // Meta
     "DOMAIN-SUFFIX,facebook.com,Meta",
     "DOMAIN-SUFFIX,facebook.net,Meta",
     "DOMAIN-SUFFIX,fbcdn.net,Meta",
     "DOMAIN-SUFFIX,fbsbx.com,Meta",
     "DOMAIN-SUFFIX,fb.com,Meta",
+    "DOMAIN-SUFFIX,facebook-hardware.com,Meta",
+    "DOMAIN-SUFFIX,fb.me,Meta",
+    "DOMAIN-SUFFIX,fb.gg,Meta",
+    "DOMAIN-SUFFIX,graph.facebook.com,Meta",
+    "DOMAIN-SUFFIX,graph.instagram.com,Meta",
+    "DOMAIN-SUFFIX,fbcdn.com,Meta",
+    "DOMAIN-SUFFIX,messengerplatform.com,Meta",
+    "DOMAIN-SUFFIX,fbcdn.com,Meta",
+    "DOMAIN-SUFFIX,instagram.com,Meta",
 
     "DOMAIN-SUFFIX,instagram.com,Meta",
     "DOMAIN-SUFFIX,cdninstagram.com,Meta",
     "DOMAIN-SUFFIX,instagram.net,Meta",
+    "DOMAIN-SUFFIX,ig.me,Meta",
 
     "DOMAIN-SUFFIX,threads.com,Meta",
     "DOMAIN-SUFFIX,threads.net,Meta",
+    "DOMAIN-SUFFIX,threadsusercontent.com,Meta",
 
     "DOMAIN-SUFFIX,messenger.com,Meta",
+    "DOMAIN-SUFFIX,messengerplatform.com,Meta",
+    "DOMAIN-SUFFIX,m.me,Meta",
 
     "DOMAIN-SUFFIX,meta.ai,Meta",
     "DOMAIN-SUFFIX,ai.meta.com,Meta",
     "DOMAIN-SUFFIX,muse.ai,Meta",
+    "IP-CIDR,157.240.0.0/16,Meta,no-resolve",
+    "IP-CIDR,31.13.64.0/18,Meta,no-resolve",
+    "IP-CIDR,69.171.224.0/19,Meta,no-resolve",
+    "IP-CIDR,173.252.64.0/18,Meta,no-resolve",
 
     // X
     "DOMAIN-SUFFIX,x.com,X",
     "DOMAIN-SUFFIX,twitter.com,X",
     "DOMAIN-SUFFIX,t.co,X",
     "DOMAIN-SUFFIX,twimg.com,X",
-
-    // WhatsApp
-    "DOMAIN-SUFFIX,whatsapp.com,WhatsApp",
-    "DOMAIN-SUFFIX,whatsapp.net,WhatsApp",
-    "DOMAIN-SUFFIX,wa.me,WhatsApp",
-    "DOMAIN-SUFFIX,whatsapp.org,WhatsApp",
 
     // Telegram
     "DOMAIN-SUFFIX,telegram.org,Telegram",
