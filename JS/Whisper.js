@@ -123,7 +123,6 @@ function main(config) {
       },
 
       "fake-ip-filter": [
-        "geosite:cn",
         "*.lan",
         "*.local",
         "localhost",
