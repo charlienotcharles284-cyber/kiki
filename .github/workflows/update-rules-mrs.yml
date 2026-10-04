@@ -1,506 +1,721 @@
 name: Update Rules MRS
 
 on:
+
   schedule:
+
     - cron: "0 0 * * *"
+
   workflow_dispatch:
 
 permissions:
+
   contents: write
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
+
     timeout-minutes: 20
 
     steps:
+
       - name: Checkout
+
         uses: actions/checkout@v4
 
       # =========================
+
       # Prepare directories
+
       # =========================
 
       - name: Prepare directories
+
         run: |
+
           mkdir -p MRS
+
           mkdir -p Rules
+
           mkdir -p .tmp/rules
 
       # =========================
+
       # Download Mihomo
+
       # =========================
 
       - name: Download Mihomo
+
         run: |
+
           wget -O mihomo.gz \
+
             https://github.com/MetaCubeX/mihomo/releases/download/v1.19.31/mihomo-linux-amd64-v1-v1.19.31.gz
+
           gzip -d mihomo.gz
+
           chmod +x mihomo
 
       # =========================
+
       # Prepare Python
+
       # =========================
 
       - name: Prepare Python
+
         uses: actions/setup-python@v5
+
         with:
+
           python-version: '3.12'
+
         continue-on-error: true
 
       - name: Install PyYAML
+
         run: |
+
           python -m pip install PyYAML==6.0.2
 
       # =========================
+
       # Original YAML Rules
+
       # Keep as repository rule sources
+
       # =========================
 
       - name: Download Original YAML Rules
+
         run: |
+
           wget -O Rules/ChinaMax.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax.yaml
 
           wget -O Rules/AdvertisingLite.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite.yaml
 
           wget -O Rules/Advertising.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml
 
           wget -O Rules/Privacy.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Privacy/Privacy.yaml
 
           wget -O Rules/Apple.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml
 
       # =========================
+
       # Microsoft
+
       #
+
       # Clash classical YAML
+
       # -> MRS-compatible domain text
+
       # =========================
 
       - name: Download Microsoft Rules
+
         run: |
+
           wget -O .tmp/rules/Microsoft.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml
 
       - name: Prepare Microsoft Domain Rules
+
         run: |
+
           python scripts/filter-microsoft.py \
+
             .tmp/rules/Microsoft.yaml \
+
             .tmp/rules/Microsoft_Domain.txt
 
       - name: Convert Microsoft Rules
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain text \
+
             .tmp/rules/Microsoft_Domain.txt \
+
             MRS/Microsoft.mrs
 
       # =========================
+
       # Copilot
+
       #
+
       # Clash classical YAML
+
       # -> Domain text
+
       # -> IP-CIDR text
+
       # =========================
 
       - name: Download Copilot Rules
+
         run: |
+
           wget -O .tmp/rules/Copilot.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Copilot/Copilot.yaml
 
       - name: Prepare Copilot Rules
+
         run: |
+
           python scripts/filter-copilot.py \
+
             .tmp/rules/Copilot.yaml \
+
             .tmp/rules/Copilot_Domain.txt \
+
             .tmp/rules/Copilot_IP.txt
 
       - name: Convert Copilot Domain Rules
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain text \
+
             .tmp/rules/Copilot_Domain.txt \
+
             MRS/Copilot_Domain.mrs
 
       - name: Convert Copilot IP Rules
+
         run: |
+
           ./mihomo convert-ruleset \
+
             ipcidr text \
+
             .tmp/rules/Copilot_IP.txt \
+
             MRS/Copilot_IP.mrs
 
       # =========================
+
       # Emby
+
       #
+
       # Keep Emby.yaml as repository
+
       # rule source.
+
       #
+
       # Clash classical YAML
+
       # -> MRS-compatible domain text
+
       # =========================
 
       - name: Download Emby Rules
+
         run: |
+
           wget -O Rules/Emby.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Emby/Emby.yaml
 
       - name: Prepare Emby Domain Rules
+
         run: |
+
           python scripts/filter-emby.py \
+
             Rules/Emby.yaml \
+
             .tmp/rules/Emby_Domain.txt
 
       - name: Convert Emby Rules
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain text \
+
             .tmp/rules/Emby_Domain.txt \
+
             MRS/Emby.mrs
 
       # =========================
+
       # ChinaMax
+
       # ChinaMax.yaml is kept as
+
       # repository rule source.
+
       #
+
       # Domain/IP files are temporary
+
       # build files.
+
       # =========================
 
       - name: Download ChinaMax Domain
+
         run: |
+
           wget -O .tmp/rules/ChinaMax_Domain.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Domain.yaml
 
-      # =========================
-      # Remove BrowserLeaks
-      #
-      # BrowserLeaks is intentionally
-      # excluded from ChinaMax because
-      # direct matching would make its
-      # IP test show the direct Chinese
-      # exit IP instead of the proxy IP.
-      #
-      # Do NOT modify Rules/ChinaMax.yaml.
-      # Only the temporary build file is
-      # filtered before MRS conversion.
-      # =========================
-
-      - name: Remove BrowserLeaks from ChinaMax Domain
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path(".tmp/rules/ChinaMax_Domain.yaml")
-
-          targets = {
-              "browserleaks.com",
-          }
-
-          lines = path.read_text(encoding="utf-8").splitlines()
-
-          output = []
-          removed = []
-
-          for line in lines:
-              stripped = line.strip()
-
-              if not stripped.startswith("-"):
-                  output.append(line)
-                  continue
-
-              rule = stripped.lstrip("-").strip().strip("'\"")
-
-              parts = [part.strip() for part in rule.split(",")]
-
-              if len(parts) >= 2:
-                  rule_type = parts[0].upper()
-                  domain = parts[1].lower().rstrip(".")
-
-                  if (
-                      rule_type in {"DOMAIN", "DOMAIN-SUFFIX"}
-                      and domain in targets
-                  ):
-                      removed.append(rule)
-                      continue
-
-              output.append(line)
-
-          path.write_text(
-              "\n".join(output) + "\n",
-              encoding="utf-8"
-          )
-
-          print("Removed BrowserLeaks rules from ChinaMax:")
-          if removed:
-              for rule in removed:
-                  print(f"  REMOVE {rule}")
-          else:
-              print("  No matching BrowserLeaks rules found.")
-
-          print(f"Removed: {len(removed)}")
-          PY
-
       - name: Download ChinaMax IP
+
         run: |
+
           wget -O .tmp/rules/ChinaMax_IP.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_IP.yaml
 
       - name: Remove ChinaMax IP ASN
+
         run: |
+
           sed -i "/^[[:space:]]*-[[:space:]]*['\"]\?132203['\"]\?[[:space:]]*$/d" .tmp/rules/ChinaMax_IP.yaml
 
       - name: Convert ChinaMax Domain
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain yaml \
+
             .tmp/rules/ChinaMax_Domain.yaml \
+
             MRS/ChinaMax_Domain.mrs
 
       - name: Convert ChinaMax IP
+
         run: |
+
           ./mihomo convert-ruleset \
+
             ipcidr yaml \
+
             .tmp/rules/ChinaMax_IP.yaml \
+
             MRS/ChinaMax_IP.mrs
 
       # =========================
+
       # Privacy
+
       # Privacy.yaml is kept as
+
       # repository rule source.
+
       # =========================
 
       - name: Download Privacy Domain
+
         run: |
+
           wget -O .tmp/rules/Privacy_Domain.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Privacy/Privacy_Domain.yaml
 
       - name: Convert Privacy Domain
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain yaml \
+
             .tmp/rules/Privacy_Domain.yaml \
+
             MRS/Privacy_Domain.mrs
 
       # =========================
+
       # Advertising
+
       # Advertising.yaml is kept as
+
       # repository rule source.
+
       # =========================
 
       - name: Download Advertising Domain
+
         run: |
+
           wget -O .tmp/rules/Advertising_Domain.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising_Domain.yaml
 
       - name: Convert Advertising Domain
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain yaml \
+
             .tmp/rules/Advertising_Domain.yaml \
+
             MRS/Advertising_Domain.mrs
 
       # =========================
+
       # AdvertisingLite
+
       # AdvertisingLite.yaml is kept as
+
       # repository rule source.
+
       #
+
       # IMPORTANT:
+
       # alicdn.com is a mixed-use Alibaba CDN.
+
       #
+
       # Keep only the following 6 domains
+
       # in AdvertisingLite:
+
       #
+
       #   alimama.alicdn.com
+
       #   aecpm.alicdn.com
+
       #   afp.alicdn.com
+
       #   afpmm.alicdn.com
+
       #   atanx2.alicdn.com
+
       #   unidesk.alicdn.com
+
       #
+
       # All other current alicdn.com rules
+
       # are removed to reduce the risk of
+
       # blocking legitimate Alibaba/Alipay
+
       # resources.
+
       # =========================
 
       - name: Download AdvertisingLite Domain
+
         run: |
+
           wget -O .tmp/rules/AdvertisingLite_Domain.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Domain.yaml
 
       - name: Remove AdvertisingLite Alibaba CDN False Positives
+
         run: |
+
           python - <<'PY'
+
           from pathlib import Path
 
           path = Path(".tmp/rules/AdvertisingLite_Domain.yaml")
 
           keep = {
+
               "alimama.alicdn.com",
+
               "aecpm.alicdn.com",
+
               "afp.alicdn.com",
+
               "afpmm.alicdn.com",
+
               "atanx2.alicdn.com",
+
               "unidesk.alicdn.com",
+
           }
 
           lines = path.read_text(encoding="utf-8").splitlines()
 
           output = []
+
           removed = []
+
           kept = []
 
           for line in lines:
+
               stripped = line.strip()
 
               if "alicdn.com" not in stripped:
+
                   output.append(line)
+
                   continue
 
               domain = stripped.strip("- ").strip("'\"")
 
               if domain.startswith("+."):
+
                   domain = domain[2:]
 
               if domain in keep:
+
                   output.append(line)
+
                   kept.append(domain)
+
               else:
+
                   removed.append(domain)
 
           path.write_text(
+
               "\n".join(output) + "\n",
+
               encoding="utf-8"
+
           )
 
           print("Kept alicdn.com rules:")
+
           for domain in sorted(set(kept)):
+
               print(f"  KEEP  {domain}")
 
           print()
+
           print("Removed alicdn.com rules:")
+
           for domain in sorted(set(removed)):
+
               print(f"  REMOVE {domain}")
 
           print()
+
           print(f"Kept: {len(set(kept))}")
+
           print(f"Removed: {len(set(removed))}")
+
           PY
 
       - name: Convert AdvertisingLite Domain
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain yaml \
+
             .tmp/rules/AdvertisingLite_Domain.yaml \
+
             MRS/AdvertisingLite_Domain.mrs
 
       # =========================
+
       # Apple
+
       # =========================
 
       - name: Download Apple Domain
+
         run: |
+
           wget -O .tmp/rules/Apple_Domain.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple_Domain.yaml
 
       # =========================
+
       # iCloud
+
       #
+
       # Keep iCloud.yaml because it is
+
       # part of the Apple/iCloud
+
       # separation logic.
+
       # =========================
 
       - name: Download iCloud Rules
+
         run: |
+
           wget -O Rules/iCloud.yaml \
+
             https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/iCloud/iCloud.yaml
 
       # =========================
+
       # Filter Apple iCloud Rules
+
       #
+
       # This step:
+
       # 1. Removes iCloud rules from Apple.yaml
+
       # 2. Filters Apple_Domain.yaml
+
       # 3. Generates iCloud_Domain.txt
+
       #
+
       # iCloud_Domain.txt contains only
+
       # MRS-compatible domain syntax.
+
       # =========================
 
       - name: Filter Apple iCloud Rules
+
         run: |
+
           python scripts/filter-icloud.py \
+
             Rules/iCloud.yaml \
+
             Rules/Apple.yaml \
+
             Rules/Apple.yaml \
+
             .tmp/rules/Apple_Domain.yaml \
+
             .tmp/rules/Apple_Domain_Filtered.yaml \
+
             .tmp/rules/iCloud_Domain.txt
 
       # =========================
+
       # Convert Apple Domain
+
       # =========================
 
       - name: Convert Apple Domain
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain yaml \
+
             .tmp/rules/Apple_Domain_Filtered.yaml \
+
             MRS/Apple_Domain.mrs
 
       # =========================
+
       # Convert iCloud
+
       #
+
       # IMPORTANT:
+
       # Do NOT feed the classical
+
       # iCloud.yaml directly into
+
       # "domain yaml".
+
       #
+
       # Use the generated pure-domain
+
       # text file instead.
+
       # =========================
 
       - name: Convert iCloud Rules
+
         run: |
+
           ./mihomo convert-ruleset \
+
             domain text \
+
             .tmp/rules/iCloud_Domain.txt \
+
             MRS/iCloud.mrs
 
       # =========================
+
       # Service Rules
+
       # =========================
 
       - name: Sync service domains and convert MRS
+
         continue-on-error: true
+
         run: |
+
           python scripts/sync-services.py --mihomo ./mihomo
 
       # =========================
+
       # Remove temporary build files
+
       #
+
       # Everything under .tmp/rules/
+
       # is generated only for this build.
+
       # Final MRS files have already been
+
       # generated before this step.
+
       # =========================
 
       - name: Remove temporary build files
+
         run: |
+
           rm -rf .tmp/rules/*
 
       # =========================
+
       # Commit
+
       # =========================
 
       - name: Commit Rules
+
         run: |
+
           git config user.name "github-actions[bot]"
+
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           git add -A MRS Rules
