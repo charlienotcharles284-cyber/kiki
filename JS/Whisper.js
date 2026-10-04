@@ -850,6 +850,7 @@ function main(config) {
     "RULE-SET,Privacy_Domain,REJECT",
     "RULE-SET,ACL4SSR_BanAD,REJECT",
     "RULE-SET,ACL4SSR_BanProgramAD,REJECT",
+    "RULE-SET,ACL4SSR_BanProgramAD_iP,REJECT",
     // 加密货币App
     "DOMAIN-SUFFIX,aicoin.com,PROXY-Gate",
     "DOMAIN-SUFFIX,coinbase.com,PROXY-Gate",
@@ -1240,6 +1241,14 @@ function main(config) {
       "format": "mrs",
       "interval": 86400,
       "url": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/mrs/BanProgramAD_domain.mrs"
+    },
+
+    "ACL4SSR_BanProgramAD_iP": {
+      "type": "http",
+      "behavior": "domain",
+      "format": "mrs",
+      "interval": 86400,
+      "url": "https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/mrs/BanProgramAD_ip.mrs"
     },
 
     "ChinaMax": {
