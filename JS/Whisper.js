@@ -661,6 +661,27 @@ function main(config) {
     },
 
     {
+      key: "IN",
+      name: "🇮🇳 IN",
+      filter: /([\[]IN[\]]|^IN$|India|Indian|\bIN\b|印度|🇮🇳)/i,
+      icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
+    },
+
+    {
+      key: "PH",
+      name: "🇵🇭 PH",
+      filter: /([\[]PH[\]]|^PH$|Philippines|Filipino|\bPH\b|菲律宾|菲律賓|马尼拉|馬尼拉|🇵🇭)/i,
+      icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
+    },
+
+    {
+      key: "VN",
+      name: "🇻🇳 VN",
+      filter: /([\[]VN[\]]|^VN$|Vietnam|Vietnamese|\bVN\b|越南|河内|河內|胡志明|🇻🇳)/i,
+      icon: "https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png"
+    },
+
+    {
       key: "MY",
       name: "🇲🇾 MY",
       filter: /([\[]MY[\]]|^MY$|Malaysia|Malaysian|\bMY\b|马来西亚|馬來西亞|吉隆坡|🇲🇾)/i,
@@ -677,8 +698,8 @@ function main(config) {
 
     const autoName = region.name + "-Auto";
 
-    // 现在只要有 2 个及以上节点，就生成该地区 Auto。
-    if (matched.length < 2) {
+    // 现在只要有 1 个及以上节点，就生成该地区 Auto。
+    if (matched.length < 1) {
       return;
     }
 
