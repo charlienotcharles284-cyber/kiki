@@ -119,6 +119,7 @@ function main(config) {
       },
 
       "fake-ip-filter": [
+        "geosite:cn",
         "*.lan",
         "*.local",
         "localhost",
@@ -1197,7 +1198,6 @@ function main(config) {
     "RULE-SET,ChinaMax,DIRECT",
     "RULE-SET,ChinaMax_Domain,DIRECT",
     "RULE-SET,ChinaMax_IP,DIRECT",
-    "GEOSITE,CN,DIRECT",
     "GEOIP,CN,DIRECT,no-resolve",
 
     // 最终兜底
