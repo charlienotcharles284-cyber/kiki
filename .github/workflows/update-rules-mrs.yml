@@ -195,13 +195,9 @@ jobs:
           from pathlib import Path
 
           path = Path(".tmp/rules/ChinaMax_Domain.yaml")
-
-          targets = {
-              "browserleaks.com",
-          }
+          targets = {"browserleaks.com"}
 
           lines = path.read_text(encoding="utf-8").splitlines()
-
           output = []
           removed = []
 
@@ -212,20 +208,34 @@ jobs:
                   output.append(line)
                   continue
 
-              rule = stripped.lstrip("-").strip().strip("'\"")
-
+              rule = stripped[1:].strip().strip("'\"")
               parts = [part.strip() for part in rule.split(",")]
 
+              # Traditional Clash rules
               if len(parts) >= 2:
                   rule_type = parts[0].upper()
                   domain = parts[1].lower().rstrip(".")
 
-                  if (
-                      rule_type in {"DOMAIN", "DOMAIN-SUFFIX"}
-                      and domain in targets
-                  ):
-                      removed.append(rule)
-                      continue
+                  if rule_type in {"DOMAIN", "DOMAIN-SUFFIX"}:
+                      if any(
+                          domain == target or domain.endswith("." + target)
+                          for target in targets
+                      ):
+                          removed.append(rule)
+                          continue
+
+              # Pure domain-list entries, e.g. +.example.com
+              domain = rule.lower().rstrip(".")
+
+              if domain.startswith("+."):
+                  domain = domain[2:]
+
+              if any(
+                  domain == target or domain.endswith("." + target)
+                  for target in targets
+              ):
+                  removed.append(rule)
+                  continue
 
               output.append(line)
 
@@ -235,11 +245,8 @@ jobs:
           )
 
           print("Removed BrowserLeaks rules from ChinaMax:")
-          if removed:
-              for rule in removed:
-                  print(f"  REMOVE {rule}")
-          else:
-              print("  No matching BrowserLeaks rules found.")
+          for rule in removed:
+              print(f"  REMOVE {rule}")
 
           print(f"Removed: {len(removed)}")
           PY
